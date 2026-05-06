@@ -1,19 +1,7 @@
 import type { Metadata } from "next";
-import { Inter, IBM_Plex_Mono } from "next/font/google";
+import "@fontsource-variable/inter";
+import "@fontsource/ibm-plex-mono/400.css";
 import "./globals.css";
-
-const aeonik = Inter({
-  subsets: ["latin"],
-  variable: "--font-aeonik",
-  display: "swap",
-});
-
-const input = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-input",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Pot — Stablecoin fundraisers that work everywhere.",
@@ -28,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${aeonik.variable} ${input.variable}`}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
