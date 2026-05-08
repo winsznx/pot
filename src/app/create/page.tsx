@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { parseUnits, parseEventLogs } from "viem";
+import { useAccount, useChainId, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { potAbi } from "@/lib/abi/pot";
+import { POT_ADDRESS, ACTIVE_CHAIN_ID, isPotDeployed } from "@/lib/wagmi";
+import { hashPotMetadata, metadataLooksValid } from "@/lib/metadata";
 
 const QUICK_AMOUNTS = [50, 100, 250, 500, 1000];
 const DURATIONS = [
@@ -15,11 +21,18 @@ const DURATIONS = [
 ];
 
 export default function CreatePotPage() {
+  const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { writeContract, data: txHash, isPending: isSigning, reset } = useWriteContract();
+  const { data: receipt, isLoading: isMining } = useWaitForTransactionReceipt({ hash: txHash });
+
   const [title, setTitle] = useState("");
   const [story, setStory] = useState("");
   const [target, setTarget] = useState<number | "">("");
   const [durationDays, setDurationDays] = useState<number>(7);
   const [refundIfMissed, setRefundIfMissed] = useState(true);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const deadlineLabel = useMemo(() => {
     if (durationDays === 0) return "No deadline";
@@ -33,10 +46,63 @@ export default function CreatePotPage() {
 
   const titleCount = title.length;
   const storyCount = story.length;
-  const isValid =
-    title.trim().length >= 4 &&
-    story.trim().length >= 20 &&
-    (target === "" || (typeof target === "number" && target >= 0));
+  const formValid = metadataLooksValid({ title, story }) && (target === "" || (typeof target === "number" && target >= 0));
+  const canSubmit = formValid && isConnected && isPotDeployed && !isSigning && !isMining;
+  const wrongChain = isConnected && chainId !== ACTIVE_CHAIN_ID;
+
+  // After tx confirms, parse the PotCreated event for the potId and redirect.
+  useEffect(() => {
+    if (!receipt) return;
+    try {
+      const events = parseEventLogs({
+        abi: potAbi,
+        eventName: "PotCreated",
+        logs: receipt.logs,
+      });
+      const ev = events[0];
+      if (ev && "args" in ev) {
+        const id = (ev.args as { potId: bigint }).potId;
+        const idStr = id.toString().padStart(4, "0");
+        router.push(`/p/${idStr}`);
+      }
+    } catch (err) {
+      console.error("could not parse PotCreated", err);
+    }
+  }, [receipt, router]);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitError(null);
+
+    if (!isConnected || !address) {
+      setSubmitError("Connect a wallet first.");
+      return;
+    }
+    if (!isPotDeployed) {
+      setSubmitError("Pot contract address isn't configured yet. Set NEXT_PUBLIC_POT_ADDRESS.");
+      return;
+    }
+
+    const targetWei = target === "" ? 0n : parseUnits(String(target), 18);
+    const deadline = durationDays === 0
+      ? 0n
+      : BigInt(Math.floor(Date.now() / 1000) + durationDays * 24 * 60 * 60);
+    const nonce = BigInt(Math.floor(Date.now() / 1000));
+    const metadataHash = hashPotMetadata({ title, story, creator: address, nonce });
+
+    writeContract({
+      abi: potAbi,
+      address: POT_ADDRESS,
+      functionName: "createPot",
+      args: [targetWei, deadline, refundIfMissed, metadataHash],
+    });
+  }
+
+  const submitLabel = isSigning
+    ? "WAITING FOR WALLET…"
+    : isMining
+      ? "MINING…"
+      : "CREATE POT →";
 
   return (
     <main className="min-h-screen bg-midnight-void text-polar-white">
@@ -56,16 +122,18 @@ export default function CreatePotPage() {
               Start a pot.
             </h1>
             <p className="mt-5 text-[18px] text-ash-gray max-w-2xl leading-[1.31]">
-              One transaction on Celo, sub-cent gas. Edit the story anytime —
-              the funds, target, and deadline are immutable once you sign.
+              One transaction on Celo, sub-cent gas. The funds, target, and deadline are
+              immutable once you sign — the story stays editable.
             </p>
 
-            <form
-              className="mt-12 space-y-10"
-              onSubmit={(e) => {
-                e.preventDefault();
-              }}
-            >
+            {!isConnected && (
+              <ConnectBanner />
+            )}
+            {wrongChain && <WrongChainBanner expected={ACTIVE_CHAIN_ID} actual={chainId} />}
+            {!isPotDeployed && <NotDeployedBanner />}
+            {submitError && <ErrorBanner message={submitError} />}
+
+            <form className="mt-12 space-y-10" onSubmit={handleSubmit}>
               <Field
                 label="POT TITLE"
                 hint={`${titleCount}/80`}
@@ -182,13 +250,22 @@ export default function CreatePotPage() {
               <div className="flex items-center gap-4 pt-4">
                 <button
                   type="submit"
-                  disabled={!isValid}
+                  disabled={!canSubmit}
                   className="btn-manifesto disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  CREATE POT →
+                  {submitLabel}
                 </button>
+                {txHash && (
+                  <button
+                    type="button"
+                    onClick={() => reset()}
+                    className="btn-ghost-secondary text-[13px]"
+                  >
+                    RESET
+                  </button>
+                )}
                 <span className="text-[13px] text-ash-gray text-mono">
-                  Signs once. Sub-cent gas on Celo.
+                  {isConnected ? "Sub-cent gas on Celo." : "Connect a wallet first."}
                 </span>
               </div>
             </form>
@@ -222,9 +299,7 @@ export default function CreatePotPage() {
                       <span className="text-ash-gray"> / ${target}</span>
                     )}
                   </span>
-                  <span className="text-ash-gray text-mono">
-                    0 contributors
-                  </span>
+                  <span className="text-ash-gray text-mono">0 contributors</span>
                 </div>
               </div>
 
@@ -249,7 +324,9 @@ export default function CreatePotPage() {
                 </li>
                 <li className="flex justify-between">
                   <span>NETWORK</span>
-                  <span className="text-polar-white">Celo · cUSD</span>
+                  <span className="text-polar-white">
+                    {ACTIVE_CHAIN_ID === 42220 ? "Celo · cUSD" : "Alfajores · cUSD"}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -328,5 +405,51 @@ function RadioCard({
       </div>
       <p className="text-[14px] text-ash-gray leading-[1.43]">{body}</p>
     </button>
+  );
+}
+
+function ConnectBanner() {
+  return (
+    <div className="mt-8 surface-card border-amber-glow/40 flex items-start gap-4">
+      <span aria-hidden className="block h-2 w-2 rounded-full bg-amber-glow mt-2" />
+      <div>
+        <div className="text-[14px] font-bold text-polar-white">Connect a wallet to continue</div>
+        <p className="text-[13px] text-ash-gray mt-1">
+          You can fill the form first, then connect when you&apos;re ready to sign.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function WrongChainBanner({ expected, actual }: { expected: number; actual?: number }) {
+  return (
+    <div className="mt-4 surface-card border-amber-glow/60">
+      <div className="text-[14px] font-bold text-amber-glow">Wrong network</div>
+      <p className="text-[13px] text-ash-gray mt-1">
+        Switch your wallet to chain {expected} (currently {actual ?? "unknown"}). Pot only signs on
+        the configured Celo network.
+      </p>
+    </div>
+  );
+}
+
+function NotDeployedBanner() {
+  return (
+    <div className="mt-4 surface-card border-dark-carbon">
+      <div className="text-[14px] font-bold text-polar-white">Pot contract not deployed yet</div>
+      <p className="text-[13px] text-ash-gray mt-1 text-mono">
+        Set <code>NEXT_PUBLIC_POT_ADDRESS</code> at build time. Until then the form is preview-only.
+      </p>
+    </div>
+  );
+}
+
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="mt-4 surface-card border-amber-glow/60">
+      <div className="text-[14px] font-bold text-amber-glow">Could not submit</div>
+      <p className="text-[13px] text-ash-gray mt-1">{message}</p>
+    </div>
   );
 }
