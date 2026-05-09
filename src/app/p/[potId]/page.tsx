@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/Header";
@@ -6,6 +7,37 @@ import { ContributeBox } from "@/components/ContributeBox";
 import { ShareButtons } from "@/components/ShareButtons";
 import { findPot } from "@/lib/mock-pots";
 import { formatUsd, progress, shortAddr, timeLeft } from "@/lib/format";
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { potId } = await params;
+  const pot = findPot(potId);
+  if (!pot) return { title: "Pot not found" };
+  const desc = pot.story.length > 160 ? `${pot.story.slice(0, 157)}…` : pot.story;
+  return {
+    title: `${pot.title} — Pot`,
+    description: desc,
+    openGraph: {
+      type: "article",
+      title: `${pot.title} — Pot`,
+      description: desc,
+      url: `/p/${potId}`,
+      images: [
+        {
+          url: `/p/${potId}/opengraph-image`,
+          width: 1200,
+          height: 630,
+          alt: pot.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${pot.title} — Pot`,
+      description: desc,
+      images: [`/p/${potId}/opengraph-image`],
+    },
+  };
+}
 
 const FAKE_CONTRIBUTORS = [
   { addr: "0x9F3aD17B0c8e2C7d44AaA4ee2e1F8Fb33C9a7811", name: "ife.eth", amount: 50, when: "2h ago" },
