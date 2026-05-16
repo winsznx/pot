@@ -1,25 +1,95 @@
 "use client";
 
 import { useState } from "react";
+import { erc20Abi, parseUnits } from "viem";
+import {
+  useAccount,
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { potAbi } from "@/lib/abi/pot";
+import { CUSD_ADDRESS, POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 
 const PRESETS = [5, 10, 25, 50, 100];
 
-export function ContributeBox({
-  potId,
-  ended,
-}: {
-  potId: string;
-  ended: boolean;
-}) {
+/**
+ * Two-step contribute: ERC20 approve (skipped when allowance already covers) → Pot.contribute.
+ * Surfaces the in-flight transaction hash so the user can confirm on Celoscan if they want.
+ */
+export function ContributeBox({ potId, ended }: { potId: string; ended: boolean }) {
+  const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState<number | "">(10);
   const [anon, setAnon] = useState(false);
   const [name, setName] = useState("");
+  const [phase, setPhase] = useState<"idle" | "approving" | "contributing">("idle");
 
-  const canContribute = !ended && typeof amount === "number" && amount > 0;
+  const wei = typeof amount === "number" && amount > 0 ? parseUnits(amount.toString(), 18) : 0n;
+  const potIdBn = (() => {
+    try {
+      return BigInt(potId);
+    } catch {
+      return 0n;
+    }
+  })();
+
+  const { data: allowance } = useReadContract({
+    abi: erc20Abi,
+    address: CUSD_ADDRESS,
+    functionName: "allowance",
+    args: address ? [address, POT_ADDRESS] : undefined,
+    query: { enabled: isConnected && isPotDeployed && !!address },
+  });
+
+  const { writeContract, data: txHash, isPending, reset } = useWriteContract();
+  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash: txHash });
+
+  const needsApprove = !allowance || (allowance as bigint) < wei;
+  const canSubmit =
+    !ended &&
+    isConnected &&
+    isPotDeployed &&
+    wei > 0n &&
+    !mining &&
+    !isPending;
+
+  function submit() {
+    if (!isConnected || wei === 0n) return;
+    if (needsApprove) {
+      setPhase("approving");
+      writeContract({
+        abi: erc20Abi,
+        address: CUSD_ADDRESS,
+        functionName: "approve",
+        args: [POT_ADDRESS, wei],
+      });
+      return;
+    }
+    setPhase("contributing");
+    writeContract({
+      abi: potAbi,
+      address: POT_ADDRESS,
+      functionName: "contribute",
+      args: [potIdBn, wei],
+    });
+  }
+
+  const buttonLabel = (() => {
+    if (ended) return "POT HAS ENDED";
+    if (mining) return phase === "approving" ? "APPROVING…" : "MINING…";
+    if (isPending) return "WAITING FOR WALLET…";
+    if (!isConnected) return "CONNECT WALLET TO CONTRIBUTE";
+    if (!isPotDeployed) return "CONTRACT NOT DEPLOYED";
+    if (needsApprove) return `APPROVE $${amount || 0} cUSD`;
+    return `CONTRIBUTE $${amount || 0} →`;
+  })();
 
   return (
     <form
-      onSubmit={(e) => e.preventDefault()}
+      onSubmit={(e) => {
+        e.preventDefault();
+        submit();
+      }}
       className="surface-card space-y-5"
     >
       <div className="flex items-center gap-2">
@@ -88,15 +158,31 @@ export function ContributeBox({
 
       <button
         type="submit"
-        disabled={!canContribute}
+        disabled={!canSubmit}
         className="btn-manifesto w-full justify-center disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {ended ? "POT HAS ENDED" : `CONTRIBUTE $${amount || 0} →`}
+        {buttonLabel}
       </button>
 
+      {txHash && (
+        <div className="flex items-center justify-between text-[12px] text-ash-gray text-mono">
+          <span>
+            tx: <span className="text-polar-white">{txHash.slice(0, 10)}…</span>
+          </span>
+          <button type="button" onClick={() => reset()} className="underline">
+            reset
+          </button>
+        </div>
+      )}
+      {confirmed && (
+        <p className="text-[13px] text-neon-green leading-[1.43]">
+          Contribution confirmed. Refresh to see your name on the wall.
+        </p>
+      )}
+
       <p className="text-[13px] text-ash-gray leading-[1.43]">
-        Sub-cent gas on Celo. Contributions are pull-refundable if the pot
-        misses its target with refunds enabled.
+        Sub-cent gas on Celo. Contributions are pull-refundable if the pot misses its target with
+        refunds enabled.
       </p>
     </form>
   );
