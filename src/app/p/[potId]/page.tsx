@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ContributeBox } from "@/components/ContributeBox";
+import { RefundButton } from "@/components/RefundButton";
 import { ShareButtons } from "@/components/ShareButtons";
 import { findPot } from "@/lib/mock-pots";
 import { formatUsd, progress, shortAddr, timeLeft } from "@/lib/format";
@@ -188,6 +189,13 @@ export default async function PotDetailPage({ params }: Props) {
 
           <aside className="space-y-6 lg:sticky lg:top-24 self-start">
             <ContributeBox potId={pot.id} ended={ended} />
+
+            <RefundButton
+              potId={pot.id}
+              eligible={
+                ended && pot.refundIfMissed && pot.target > 0 && pot.raised < pot.target
+              }
+            />
 
             <div className="surface-card">
               <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono mb-4 block">
