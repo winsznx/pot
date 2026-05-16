@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PotCard } from "@/components/PotCard";
+import { CheckInButton } from "@/components/CheckInButton";
+import { WithdrawButton } from "@/components/WithdrawButton";
 import { MOCK_POTS } from "@/lib/mock-pots";
 import { formatUsd, progress, timeLeft } from "@/lib/format";
 
@@ -50,6 +52,10 @@ export default function DashboardPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-8">
+          <CheckInButton />
         </div>
 
         <div className="mt-16">
@@ -125,9 +131,7 @@ export default function DashboardPage() {
 
                     <div className="flex md:justify-end">
                       {canWithdraw ? (
-                        <button className="btn-manifesto py-2 px-4 text-[14px]">
-                          WITHDRAW →
-                        </button>
+                        <WithdrawButton potId={pot.id} />
                       ) : (
                         <span className="text-[13px] text-ash-gray text-mono">
                           IN PROGRESS
