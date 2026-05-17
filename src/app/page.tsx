@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { PotCard } from "@/components/PotCard";
 import { DotArt } from "@/components/DotArt";
 import { LivePotsStrip } from "@/components/LivePotsStrip";
-import { MOCK_POTS } from "@/lib/mock-pots";
 
 const STATS = [
   { label: "POTS LIVE", value: "412" },
@@ -35,14 +33,13 @@ const HOW_STEPS = [
 ];
 
 export default function HomePage() {
-  const featured = MOCK_POTS.slice(0, 3);
   return (
     <main className="min-h-screen bg-midnight-void text-polar-white">
       <Header />
 
       <Hero />
       <Stats />
-      <FeaturedPots featured={featured} />
+      <FeaturedPots />
       <HowItWorks />
       <WhyPot />
       <BeltCta />
@@ -133,7 +130,7 @@ function Stats() {
   );
 }
 
-function FeaturedPots({ featured }: { featured: typeof MOCK_POTS }) {
+function FeaturedPots() {
   return (
     <section id="examples" className="section dot-grid-bg">
       <div className="container-page">
@@ -156,18 +153,6 @@ function FeaturedPots({ featured }: { featured: typeof MOCK_POTS }) {
         </div>
 
         <LivePotsStrip />
-
-        {/* legacy mock-card fallback rendered alongside while the chain pool is small */}
-        <div className="mt-12 opacity-60">
-          <div className="text-[13px] text-mono text-ash-gray uppercase tracking-[0.06em] mb-4">
-            example archive
-          </div>
-          <div className="grid gap-5 md:grid-cols-3">
-            {featured.map((pot) => (
-              <PotCard key={pot.id} pot={pot} />
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );
