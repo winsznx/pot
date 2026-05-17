@@ -1,14 +1,21 @@
 import { ImageResponse } from "next/og";
-import { findPot } from "@/lib/mock-pots";
-import { formatUsd, progress, timeLeft } from "@/lib/format";
+import { formatUnits } from "viem";
+import { fetchPot } from "@/lib/chain";
 
 export const alt = "Pot detail share card";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default async function Image({ params }: { params: Promise<{ potId: string }> }) {
+const NOT_FOUND_BG = "#101010";
+
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ potId: string }>;
+}) {
   const { potId } = await params;
-  const pot = findPot(potId);
+  const pot = await fetchPot(potId);
+
   if (!pot) {
     return new ImageResponse(
       (
@@ -19,22 +26,28 @@ export default async function Image({ params }: { params: Promise<{ potId: strin
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "#101010",
+            flexDirection: "column",
+            gap: 12,
+            background: NOT_FOUND_BG,
             color: "#F3F3F3",
-            fontSize: 64,
+            fontSize: 56,
             fontFamily: "Inter, system-ui",
           }}
         >
-          Pot not found
+          <div style={{ fontSize: 24, color: "#949494" }}>Pot.{potId}</div>
+          <div>Not yet on chain</div>
         </div>
       ),
       size,
     );
   }
 
-  const pct = pot.target > 0 ? progress(pot.raised, pot.target) : 100;
-  const isFunded = pot.target > 0 && pot.raised >= pot.target;
+  const target = Number(formatUnits(pot.target, 18));
+  const raised = Number(formatUnits(pot.raised, 18));
+  const pct = target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : 100;
+  const isFunded = target > 0 && raised >= target;
   const accent = isFunded ? "#E7C59A" : "#00AC5C";
+  const statusLabel = pot.status === "Active" ? (isFunded ? "TARGET REACHED" : "ACTIVE") : pot.status.toUpperCase();
 
   return new ImageResponse(
     (
@@ -50,7 +63,6 @@ export default async function Image({ params }: { params: Promise<{ potId: strin
           fontFamily: "Inter, system-ui",
         }}
       >
-        {/* top row */}
         <div
           style={{
             display: "flex",
@@ -89,20 +101,28 @@ export default async function Image({ params }: { params: Promise<{ potId: strin
           </div>
         </div>
 
-        {/* title */}
         <div
           style={{
-            fontSize: pot.title.length > 60 ? 56 : 72,
+            fontSize: 92,
             fontWeight: 700,
             lineHeight: 1.05,
             letterSpacing: -0.5,
             display: "flex",
           }}
         >
-          {pot.title}
+          Pot.{pot.id}
+        </div>
+        <div
+          style={{
+            fontSize: 24,
+            color: "#949494",
+            marginTop: 14,
+            display: "flex",
+          }}
+        >
+          {statusLabel} · refunds {pot.refundIfMissed ? "enabled" : "disabled"}
         </div>
 
-        {/* progress + raised */}
         <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", gap: 18 }}>
           <div
             style={{
@@ -126,12 +146,18 @@ export default async function Image({ params }: { params: Promise<{ potId: strin
             }}
           >
             <div style={{ display: "flex", gap: 14 }}>
-              <span style={{ fontWeight: 700, color: accent }}>{formatUsd(pot.raised)}</span>
-              {pot.target > 0 && <span style={{ color: "#949494" }}>/ {formatUsd(pot.target)}</span>}
-              <span style={{ color: "#949494" }}>· {pot.contributors} contributors</span>
+              <span style={{ fontWeight: 700, color: accent }}>${raised.toFixed(0)}</span>
+              {target > 0 && (
+                <span style={{ color: "#949494" }}>/ ${target.toFixed(0)}</span>
+              )}
             </div>
             <span style={{ color: "#949494" }}>
-              {pot.deadline === 0 ? "OPEN-ENDED" : timeLeft(pot.deadline)}
+              {pot.deadline === 0n
+                ? "OPEN-ENDED"
+                : `closes ${new Date(Number(pot.deadline) * 1000).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}`}
             </span>
           </div>
         </div>
