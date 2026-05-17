@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { PotCard } from "@/components/PotCard";
 import { CheckInButton } from "@/components/CheckInButton";
 import { OwnPots } from "@/components/OwnPots";
-import { MOCK_POTS } from "@/lib/mock-pots";
 
 export default function DashboardPage() {
-  const browseMore = MOCK_POTS.slice(3);
-
   return (
     <main className="min-h-screen bg-midnight-void text-polar-white">
       <Header />
@@ -19,12 +15,10 @@ export default function DashboardPage() {
             <div className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono mb-3">
               DASHBOARD · onchain
             </div>
-            <h1 className="text-[44px] font-bold leading-[1.03]">
-              Your pots, your money.
-            </h1>
+            <h1 className="text-[44px] font-bold leading-[1.03]">Your pots, your money.</h1>
             <p className="mt-4 text-[16px] text-ash-gray max-w-xl leading-[1.5]">
-              Withdraw raised cUSD, edit stories, and watch contributions land
-              in real time. The contract is the source of truth.
+              Withdraw raised cUSD, edit stories, and watch contributions land in real time. The
+              contract is the source of truth.
             </p>
           </div>
           <Link href="/create" className="btn-manifesto">
@@ -48,19 +42,14 @@ export default function DashboardPage() {
 
         <div className="mt-16">
           <div className="flex items-end justify-between gap-6 flex-wrap mb-6">
-            <h2 className="text-[23px] font-bold leading-[1.11]">
-              Browse other pots
-            </h2>
+            <h2 className="text-[23px] font-bold leading-[1.11]">Browse other pots</h2>
             <Link href="/" className="btn-ghost-secondary">
               SEE EVERYTHING →
             </Link>
           </div>
-
-          <div className="grid gap-5 md:grid-cols-3">
-            {browseMore.map((pot) => (
-              <PotCard key={pot.id} pot={pot} />
-            ))}
-          </div>
+          <p className="text-[14px] text-ash-gray text-mono">
+            The full live list of active pots lives on the landing page → /
+          </p>
         </div>
       </section>
 
