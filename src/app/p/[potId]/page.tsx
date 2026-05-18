@@ -5,6 +5,7 @@ import { formatUnits } from "viem";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ContributeBox } from "@/components/ContributeBox";
+import { EndorsePotButton } from "@/components/EndorsePotButton";
 import { RefundButton } from "@/components/RefundButton";
 import { ShareButtons } from "@/components/ShareButtons";
 import { TagPanel } from "@/components/TagPanel";
@@ -194,6 +195,8 @@ export default async function PotDetailPage({ params }: Props) {
                 ended && pot.refundIfMissed && pot.target > 0n && pot.raised < pot.target
               }
             />
+
+            <EndorsePotButton potId={pot.id} ended={ended} />
 
             <TagPanel potId={pot.id} />
 
