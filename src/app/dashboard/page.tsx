@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CheckInButton } from "@/components/CheckInButton";
-import { OwnPots } from "@/components/OwnPots";
+import { OwnPots, OwnPotsSummary } from "@/components/OwnPots";
 
 export default function DashboardPage() {
   return (
@@ -24,6 +24,10 @@ export default function DashboardPage() {
           <Link href="/create" className="btn-manifesto">
             CREATE NEW POT →
           </Link>
+        </div>
+
+        <div className="mt-12">
+          <OwnPotsSummary />
         </div>
 
         <div className="mt-12">
