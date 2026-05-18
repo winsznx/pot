@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { ContributeBox } from "@/components/ContributeBox";
 import { RefundButton } from "@/components/RefundButton";
 import { ShareButtons } from "@/components/ShareButtons";
+import { TagPanel } from "@/components/TagPanel";
 import { fetchContributors, fetchPot, type OnchainPot } from "@/lib/chain";
 import { progress, shortAddr, timeLeft } from "@/lib/format";
 import { isPotDeployed } from "@/lib/wagmi";
@@ -193,6 +194,8 @@ export default async function PotDetailPage({ params }: Props) {
                 ended && pot.refundIfMissed && pot.target > 0n && pot.raised < pot.target
               }
             />
+
+            <TagPanel potId={pot.id} />
 
             <div className="surface-card">
               <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono mb-4 block">
