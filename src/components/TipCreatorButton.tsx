@@ -1,0 +1,151 @@
+"use client";
+
+import { useState } from "react";
+import { erc20Abi, parseUnits } from "viem";
+import {
+  useAccount,
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { potAbi } from "@/lib/abi/pot";
+import { CUSD_ADDRESS, POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
+
+const PRESETS = [1, 5, 10, 25];
+
+/**
+ * Direct cUSD tip to a pot's creator. Doesn't touch the escrow path — funds
+ * forward straight from the tipper to the creator. Useful when a backer wants
+ * to show appreciation outside of the campaign math (or when the pot is
+ * already withdrawn but still surfaced).
+ */
+export function TipCreatorButton({ potId }: { potId: string }) {
+  const { address, isConnected } = useAccount();
+  const [amount, setAmount] = useState<number>(5);
+
+  const potIdBn = (() => {
+    try {
+      return BigInt(potId);
+    } catch {
+      return 0n;
+    }
+  })();
+
+  const wei = parseUnits(amount.toString(), 18);
+
+  const { data: allowance } = useReadContract({
+    abi: erc20Abi,
+    address: CUSD_ADDRESS,
+    functionName: "allowance",
+    args: address ? [address, POT_ADDRESS] : undefined,
+    query: { enabled: isConnected && isPotDeployed && !!address },
+  });
+
+  const needsApprove = !allowance || (allowance as bigint) < wei;
+
+  const { writeContract, data: hash, isPending, reset } = useWriteContract();
+  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
+
+  function submit() {
+    if (!isConnected || amount <= 0) return;
+    if (needsApprove) {
+      writeContract({
+        abi: erc20Abi,
+        address: CUSD_ADDRESS,
+        functionName: "approve",
+        args: [POT_ADDRESS, wei],
+      });
+      return;
+    }
+    writeContract({
+      abi: potAbi,
+      address: POT_ADDRESS,
+      functionName: "tipCreator",
+      args: [potIdBn, wei],
+    });
+  }
+
+  const label = (() => {
+    if (mining) return needsApprove ? "APPROVING…" : "TIPPING…";
+    if (isPending) return "WAITING FOR WALLET…";
+    if (!isConnected) return "CONNECT WALLET TO TIP";
+    if (!isPotDeployed) return "CONTRACT NOT DEPLOYED";
+    return needsApprove ? `APPROVE $${amount} cUSD` : `TIP $${amount} →`;
+  })();
+
+  const disabled = !isConnected || !isPotDeployed || mining || isPending;
+
+  return (
+    <div className="surface-card space-y-4">
+      <div className="flex items-center gap-2">
+        <span aria-hidden className="block h-2 w-2 rounded-full bg-amber-glow" />
+        <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
+          TIP THE CREATOR
+        </span>
+      </div>
+
+      <div>
+        <span className="field-label">Amount (cUSD)</span>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {PRESETS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setAmount(p)}
+              className={`px-3 py-1.5 rounded-lg text-[13px] text-mono border transition-colors ${
+                amount === p
+                  ? "border-amber-glow text-amber-glow"
+                  : "border-dark-carbon text-ash-gray hover:text-polar-white"
+              }`}
+            >
+              ${p}
+            </button>
+          ))}
+        </div>
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ash-gray text-mono">
+            $
+          </span>
+          <input
+            className="field-input pl-8 input-mono"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="1"
+            value={amount}
+            onChange={(e) => setAmount(Math.max(0, Number(e.target.value) || 0))}
+          />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={submit}
+        disabled={disabled || amount <= 0}
+        className="btn-manifesto w-full justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {label}
+      </button>
+
+      {hash && (
+        <div className="flex items-center justify-between text-[12px] text-mono text-ash-gray">
+          <span>
+            tx: <span className="text-polar-white">{hash.slice(0, 10)}…</span>
+          </span>
+          <button type="button" onClick={() => reset()} className="underline">
+            reset
+          </button>
+        </div>
+      )}
+      {confirmed && (
+        <p className="text-[13px] text-neon-green leading-[1.43]">
+          Tip sent. 100% to the creator — no escrow, no fee.
+        </p>
+      )}
+
+      <p className="text-[13px] text-ash-gray leading-[1.43]">
+        Tips don&apos;t count toward the pot&apos;s target — they pay the creator directly.
+      </p>
+    </div>
+  );
+}
