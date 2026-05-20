@@ -8,6 +8,7 @@ import { ContributeBox } from "@/components/ContributeBox";
 import { EndorsePotButton } from "@/components/EndorsePotButton";
 import { RefundButton } from "@/components/RefundButton";
 import { ShareButtons } from "@/components/ShareButtons";
+import { TipCreatorButton } from "@/components/TipCreatorButton";
 import { TagPanel } from "@/components/TagPanel";
 import { fetchContributors, fetchPot, type OnchainPot } from "@/lib/chain";
 import { progress, shortAddr, timeLeft } from "@/lib/format";
@@ -197,6 +198,8 @@ export default async function PotDetailPage({ params }: Props) {
             />
 
             <EndorsePotButton potId={pot.id} ended={ended} />
+
+            <TipCreatorButton potId={pot.id} />
 
             <TagPanel potId={pot.id} />
 
