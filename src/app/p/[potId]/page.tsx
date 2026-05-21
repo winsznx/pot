@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ContributeBox } from "@/components/ContributeBox";
 import { EndorsePotButton } from "@/components/EndorsePotButton";
+import { MatchContributionPanel } from "@/components/MatchContributionPanel";
 import { RefundButton } from "@/components/RefundButton";
 import { ShareButtons } from "@/components/ShareButtons";
 import { TipCreatorButton } from "@/components/TipCreatorButton";
@@ -198,6 +199,8 @@ export default async function PotDetailPage({ params }: Props) {
             />
 
             <EndorsePotButton potId={pot.id} ended={ended} />
+
+            <MatchContributionPanel potId={pot.id} ended={ended} />
 
             <TipCreatorButton potId={pot.id} />
 
