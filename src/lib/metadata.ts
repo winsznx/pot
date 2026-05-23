@@ -1,4 +1,4 @@
-import { keccak256, toBytes, encodePacked } from "viem";
+import { keccak256, encodePacked } from "viem";
 
 /**
  * Hash the off-chain pot metadata. The contract stores only the hash; the
