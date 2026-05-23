@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { potAbi } from "@/lib/abi/pot";
 import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
@@ -16,6 +17,16 @@ const COOLDOWN_SEC = 20 * 60 * 60; // matches Pot.CHECK_IN_COOLDOWN
  */
 export function CheckInButton() {
   const { address, isConnected } = useAccount();
+  const [nowSec, setNowSec] = useState(0);
+
+  useEffect(() => {
+    const initial = window.setTimeout(() => setNowSec(Math.floor(Date.now() / 1000)), 0);
+    const id = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 60_000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(id);
+    };
+  }, []);
 
   const { data: last, refetch: refetchLast } = useReadContract({
     abi: potAbi,
@@ -40,7 +51,6 @@ export function CheckInButton() {
   });
 
   const lastTs = typeof last === "bigint" ? Number(last) : 0;
-  const nowSec = Math.floor(Date.now() / 1000);
   const secondsLeft = lastTs === 0 ? 0 : Math.max(0, lastTs + COOLDOWN_SEC - nowSec);
   const onCooldown = secondsLeft > 0;
   const runVal = streak !== undefined ? Number(streak) : 0;
