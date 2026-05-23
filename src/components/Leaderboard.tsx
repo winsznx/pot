@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { useChainId, useConfig } from "wagmi";
+import { useConfig } from "wagmi";
 import { getPublicClient } from "wagmi/actions";
 import { useQuery } from "@tanstack/react-query";
+import { celo } from "wagmi/chains";
 import { potAbi } from "@/lib/abi/pot";
 import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 import { shortAddr } from "@/lib/format";
@@ -28,13 +29,12 @@ const ACTOR_EVENTS: ActorEvent[] = [
 const PAGE_SIZE = 25;
 
 export function Leaderboard() {
-  const chainId = useChainId();
   const config = useConfig();
 
   const query = useQuery({
-    queryKey: ["pot-leaderboard", chainId, POT_ADDRESS],
+    queryKey: ["pot-leaderboard", celo.id, POT_ADDRESS],
     queryFn: async () => {
-      const client = getPublicClient(config, { chainId });
+      const client = getPublicClient(config, { chainId: celo.id });
       if (!client) return [];
       return fetchActorAggregates({
         client,
