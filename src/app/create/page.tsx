@@ -36,12 +36,7 @@ export default function CreatePotPage() {
 
   const deadlineLabel = useMemo(() => {
     if (durationDays === 0) return "No deadline";
-    const d = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
-    return d.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    return `${durationDays} day${durationDays === 1 ? "" : "s"} from creation`;
   }, [durationDays]);
 
   const titleCount = title.length;
@@ -105,25 +100,26 @@ export default function CreatePotPage() {
       : "CREATE POT →";
 
   return (
-    <main className="min-h-screen bg-midnight-void text-polar-white">
+    <main className="app-shell">
       <Header />
 
-      <section className="container-page py-16 md:py-24">
-        <div className="grid lg:grid-cols-[1fr_400px] gap-12">
+      <section className="container-wide py-12 md:py-20">
+        <div className="grid gap-10 lg:grid-cols-[1fr_420px]">
           <div>
             <Link
               href="/"
-              className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono hover:text-polar-white"
+              className="btn-ghost-secondary px-0"
             >
-              ← BACK TO LANDING
+              Back to landing
             </Link>
 
-            <h1 className="mt-6 text-[44px] md:text-[63px] font-bold leading-[0.95] tracking-[-0.011em]">
-              Start a pot.
-            </h1>
-            <p className="mt-5 text-[18px] text-ash-gray max-w-2xl leading-[1.31]">
-              One transaction on Celo, sub-cent gas. The funds, target, and deadline are
-              immutable once you sign — the story stays editable.
+            <div className="mt-8 max-w-3xl">
+              <div className="eyebrow">Create fundraiser</div>
+              <h1 className="mt-3 display-lg">Define the terms people can trust.</h1>
+            </div>
+            <p className="mt-5 max-w-2xl body-lg">
+              One transaction writes the target, deadline, refund policy, and metadata hash to Celo.
+              Make the story specific, then share a wallet-native link.
             </p>
 
             {!isConnected && (
@@ -133,7 +129,7 @@ export default function CreatePotPage() {
             {!isPotDeployed && <NotDeployedBanner />}
             {submitError && <ErrorBanner message={submitError} />}
 
-            <form className="mt-12 space-y-10" onSubmit={handleSubmit}>
+            <form className="mt-10 space-y-8" onSubmit={handleSubmit}>
               <Field
                 label="POT TITLE"
                 hint={`${titleCount}/80`}
@@ -190,10 +186,10 @@ export default function CreatePotPage() {
                       <button
                         key={amount}
                         type="button"
-                        className={`px-4 py-2 rounded-lg text-[13px] text-mono border transition-colors ${
+                    className={`btn-secondary min-h-0 px-4 py-2 text-[13px] ${
                           target === amount
-                            ? "border-amber-glow text-amber-glow"
-                            : "border-dark-carbon text-ash-gray hover:text-polar-white"
+                            ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                            : ""
                         }`}
                         onClick={() => setTarget(amount)}
                       >
@@ -217,10 +213,10 @@ export default function CreatePotPage() {
                     <button
                       key={d.label}
                       type="button"
-                      className={`px-4 py-2 rounded-lg text-[13px] text-mono border transition-colors ${
+                      className={`btn-secondary min-h-0 px-4 py-2 text-[13px] ${
                         durationDays === d.days
-                          ? "border-amber-glow text-amber-glow"
-                          : "border-dark-carbon text-ash-gray hover:text-polar-white"
+                          ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
+                          : ""
                       }`}
                       onClick={() => setDurationDays(d.days)}
                     >
@@ -247,7 +243,7 @@ export default function CreatePotPage() {
                 </div>
               </Field>
 
-              <div className="flex items-center gap-4 pt-4">
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
                 <button
                   type="submit"
                   disabled={!canSubmit}
@@ -264,26 +260,26 @@ export default function CreatePotPage() {
                     RESET
                   </button>
                 )}
-                <span className="text-[13px] text-ash-gray text-mono">
+                <span className="body-sm text-mono">
                   {isConnected ? "Sub-cent gas on Celo." : "Connect a wallet first."}
                 </span>
               </div>
             </form>
           </div>
 
-          <aside className="lg:sticky lg:top-24 self-start">
-            <div className="surface-card">
+          <aside className="self-start lg:sticky lg:top-24">
+            <div className="surface-raised p-5">
               <div className="flex items-center gap-2 mb-5">
-                <span aria-hidden className="block h-2 w-2 rounded-full bg-neon-green" />
-                <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
+                <span aria-hidden className="status-dot text-[var(--success)]" />
+                <span className="label-caps">
                   PREVIEW
                 </span>
               </div>
 
-              <h3 className="text-[21px] font-bold text-polar-white leading-[1.22] mb-3">
+              <h3 className="heading-md mb-3">
                 {title.trim() || "Your title appears here"}
               </h3>
-              <p className="text-[14px] text-ash-gray leading-[1.43] mb-6 line-clamp-4">
+              <p className="body-sm mb-6 line-clamp-4">
                 {story.trim() ||
                   "Your story appears here. Aim for 2–4 sentences — the why, the who, and what happens if it's funded."}
               </p>
@@ -293,38 +289,36 @@ export default function CreatePotPage() {
                   <div className="progress-fill" style={{ width: "0%" }} />
                 </div>
                 <div className="flex items-center justify-between text-[14px]">
-                  <span className="text-polar-white text-mono">
+                  <span className="text-mono">
                     <span className="font-bold">$0</span>
-                    {target !== "" && target !== 0 && (
-                      <span className="text-ash-gray"> / ${target}</span>
-                    )}
+                    {target !== "" && target !== 0 && <span className="text-[var(--text-tertiary)]"> / ${target}</span>}
                   </span>
-                  <span className="text-ash-gray text-mono">0 contributors</span>
+                  <span className="text-[var(--text-tertiary)] text-mono">0 contributors</span>
                 </div>
               </div>
 
               <div className="divider my-6" />
 
-              <ul className="space-y-3 text-[13px] text-ash-gray text-mono">
+              <ul className="space-y-3 text-[13px] text-[var(--text-tertiary)] text-mono">
                 <li className="flex justify-between">
                   <span>DEADLINE</span>
-                  <span className="text-polar-white">
+                  <span className="text-[var(--text-primary)]">
                     {durationDays === 0 ? "—" : deadlineLabel}
                   </span>
                 </li>
                 <li className="flex justify-between">
                   <span>REFUND POLICY</span>
-                  <span className="text-polar-white">
+                  <span className="text-[var(--text-primary)]">
                     {refundIfMissed ? "ENABLED" : "DISABLED"}
                   </span>
                 </li>
                 <li className="flex justify-between">
                   <span>PROTOCOL FEE</span>
-                  <span className="text-polar-white">1% on withdraw</span>
+                  <span className="text-[var(--text-primary)]">1% on withdraw</span>
                 </li>
                 <li className="flex justify-between">
                   <span>NETWORK</span>
-                  <span className="text-polar-white">
+                  <span className="text-[var(--text-primary)]">
                     {ACTIVE_CHAIN_ID === 42220 ? "Celo · cUSD" : "Alfajores · cUSD"}
                   </span>
                 </li>
@@ -357,7 +351,7 @@ function Field({
         {hint && (
           <span
             className={`text-[13px] text-mono ${
-              hintTone === "warn" ? "text-amber-glow" : "text-ash-gray"
+              hintTone === "warn" ? "text-[var(--warning)]" : "text-[var(--text-tertiary)]"
             }`}
           >
             {hint}
@@ -386,8 +380,8 @@ function RadioCard({
       onClick={onClick}
       className={`text-left rounded-lg p-5 border transition-colors ${
         selected
-          ? "border-amber-glow bg-deep-space"
-          : "border-dark-carbon bg-deep-space hover:border-ash-gray"
+          ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+          : "border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)]"
       }`}
     >
       <div className="flex items-center gap-3 mb-3">
@@ -395,26 +389,26 @@ function RadioCard({
           aria-hidden
           className={`block h-3 w-3 rounded-full border ${
             selected
-              ? "border-amber-glow bg-amber-glow"
-              : "border-ash-gray bg-transparent"
+              ? "border-[var(--accent)] bg-[var(--accent)]"
+              : "border-[var(--border-strong)] bg-transparent"
           }`}
         />
-        <span className="text-[13px] uppercase text-mono tracking-[0.06em] text-polar-white">
+        <span className="text-[13px] uppercase text-mono text-[var(--text-primary)]">
           {title}
         </span>
       </div>
-      <p className="text-[14px] text-ash-gray leading-[1.43]">{body}</p>
+      <p className="body-sm">{body}</p>
     </button>
   );
 }
 
 function ConnectBanner() {
   return (
-    <div className="mt-8 surface-card border-amber-glow/40 flex items-start gap-4">
-      <span aria-hidden className="block h-2 w-2 rounded-full bg-amber-glow mt-2" />
+    <div className="mt-8 surface-card flex items-start gap-4 border-[var(--warning)]/40 bg-[var(--warning-soft)]">
+      <span aria-hidden className="status-dot mt-2 text-[var(--warning)]" />
       <div>
-        <div className="text-[14px] font-bold text-polar-white">Connect a wallet to continue</div>
-        <p className="text-[13px] text-ash-gray mt-1">
+        <div className="text-[14px] font-bold text-[var(--text-primary)]">Connect a wallet to continue</div>
+        <p className="body-sm mt-1">
           You can fill the form first, then connect when you&apos;re ready to sign.
         </p>
       </div>
@@ -424,9 +418,9 @@ function ConnectBanner() {
 
 function WrongChainBanner({ expected, actual }: { expected: number; actual?: number }) {
   return (
-    <div className="mt-4 surface-card border-amber-glow/60">
-      <div className="text-[14px] font-bold text-amber-glow">Wrong network</div>
-      <p className="text-[13px] text-ash-gray mt-1">
+    <div className="mt-4 surface-card border-[var(--warning)] bg-[var(--warning-soft)]">
+      <div className="text-[14px] font-bold text-[var(--warning)]">Wrong network</div>
+      <p className="body-sm mt-1">
         Switch your wallet to chain {expected} (currently {actual ?? "unknown"}). Pot only signs on
         the configured Celo network.
       </p>
@@ -436,9 +430,9 @@ function WrongChainBanner({ expected, actual }: { expected: number; actual?: num
 
 function NotDeployedBanner() {
   return (
-    <div className="mt-4 surface-card border-dark-carbon">
-      <div className="text-[14px] font-bold text-polar-white">Pot contract not deployed yet</div>
-      <p className="text-[13px] text-ash-gray mt-1 text-mono">
+    <div className="mt-4 surface-card">
+      <div className="text-[14px] font-bold text-[var(--text-primary)]">Pot contract not deployed yet</div>
+      <p className="body-sm mt-1 text-mono">
         Set <code>NEXT_PUBLIC_POT_ADDRESS</code> at build time. Until then the form is preview-only.
       </p>
     </div>
@@ -447,9 +441,9 @@ function NotDeployedBanner() {
 
 function ErrorBanner({ message }: { message: string }) {
   return (
-    <div className="mt-4 surface-card border-amber-glow/60">
-      <div className="text-[14px] font-bold text-amber-glow">Could not submit</div>
-      <p className="text-[13px] text-ash-gray mt-1">{message}</p>
+    <div className="mt-4 surface-card border-[var(--danger)] bg-[var(--danger-soft)]">
+      <div className="text-[14px] font-bold text-[var(--danger)]">Could not submit</div>
+      <p className="body-sm mt-1">{message}</p>
     </div>
   );
 }
