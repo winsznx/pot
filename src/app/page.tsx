@@ -52,7 +52,7 @@ export default function HomePage() {
 function Hero() {
   return (
     <section className="relative crosshatch-bg border-b border-dark-carbon">
-      <div className="container-page pt-20 pb-24 md:pt-28 md:pb-32 grid lg:grid-cols-[1fr_auto] gap-16 items-center">
+      <div className="container-page pt-14 pb-16 md:pt-28 md:pb-32 grid lg:grid-cols-[1fr_auto] gap-12 md:gap-16 items-center">
         <div>
           <div className="flex items-center gap-3 mb-10 flex-wrap">
             <span className="tag-status">
@@ -64,26 +64,26 @@ function Hero() {
             </span>
           </div>
 
-          <h1 className="text-[44px] md:text-[63px] font-bold leading-[0.95] tracking-[-0.011em] max-w-3xl text-polar-white">
+          <h1 className="text-[34px] sm:text-[44px] md:text-[56px] lg:text-[63px] font-bold leading-[1] md:leading-[0.95] tracking-[-0.011em] max-w-3xl text-polar-white">
             Stablecoin fundraisers
-            <br />
+            <br className="hidden sm:block" />{" "}
             <span className="text-slate">that work everywhere.</span>
           </h1>
 
-          <p className="mt-8 max-w-2xl text-[18px] text-polar-white leading-[1.31]">
+          <p className="mt-6 md:mt-8 max-w-2xl text-base md:text-[18px] text-polar-white leading-[1.4] md:leading-[1.31]">
             Like GoFundMe, but it works in 66 countries, settles in seconds,
             and has zero platform fees. Spin up a pot, drop the link in any
             chat, watch it fill in real time.
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center gap-4">
+          <div className="mt-8 md:mt-10 flex flex-wrap items-center gap-3 md:gap-4">
             <Link href="/create" className="btn-manifesto">
               START A POT →
             </Link>
             <Link href="#examples" className="btn-ghost-secondary">
               VIEW LIVE POTS
             </Link>
-            <span className="text-[13px] text-ash-gray text-mono ml-2">
+            <span className="hidden sm:inline text-[13px] text-ash-gray text-mono ml-2">
               Sub-cent gas · cUSD · MiniPay-ready
             </span>
           </div>
@@ -116,11 +116,11 @@ function Stats() {
     <section className="bg-deep-space border-b border-dark-carbon">
       <div className="container-page grid grid-cols-2 md:grid-cols-4 divide-x divide-dark-carbon">
         {STATS.map((stat) => (
-          <div key={stat.label} className="py-10 px-6">
-            <div className="text-[13px] uppercase text-ash-gray tracking-[0.08em] text-mono mb-3">
+          <div key={stat.label} className="py-8 md:py-10 px-4 md:px-6">
+            <div className="text-[11px] md:text-[13px] uppercase text-ash-gray tracking-[0.08em] text-mono mb-2 md:mb-3">
               {stat.label}
             </div>
-            <div className="text-[34px] font-bold text-polar-white leading-[1.07]">
+            <div className="text-[26px] md:text-[34px] font-bold text-polar-white leading-[1.07] tabular-nums">
               {stat.value}
             </div>
           </div>
@@ -142,7 +142,7 @@ function FeaturedPots() {
                 LIVE POTS · UPDATING NOW
               </span>
             </div>
-            <h2 className="text-[34px] md:text-[44px] font-bold leading-[1.03]">
+            <h2 className="text-[28px] sm:text-[34px] md:text-[44px] font-bold leading-[1.05] md:leading-[1.03]">
               Real pots, real people,
               <br className="hidden md:block" /> right now.
             </h2>
