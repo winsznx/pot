@@ -22,6 +22,9 @@ export function Header() {
           </Link>
           <Link href="/dashboard" className="nav-link">
             DASHBOARD
+          </Link>
+          <Link href="/leaderboard" className="nav-link">
+            LEADERBOARD
             <span className="tag-new">NEW</span>
           </Link>
         </nav>
