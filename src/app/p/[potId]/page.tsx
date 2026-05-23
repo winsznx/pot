@@ -64,7 +64,7 @@ export default async function PotDetailPage({ params }: Props) {
   if (!pot) notFound();
 
   const contributors = await fetchContributors(potId);
-  const ended = pot.deadline !== 0n && pot.deadline * 1000n <= BigInt(Date.now());
+  const ended = pot.deadline !== 0n && pot.deadline * 1000n <= BigInt(currentEpochMs());
   const target = Number(formatUnits(pot.target, 18));
   const raised = Number(formatUnits(pot.raised, 18));
   const pct = target > 0 ? progress(raised, target) : 100;
@@ -73,43 +73,41 @@ export default async function PotDetailPage({ params }: Props) {
   const ddlMs = Number(pot.deadline) * 1000;
 
   return (
-    <main className="min-h-screen bg-midnight-void text-polar-white">
+    <main className="app-shell">
       <Header />
 
-      <section className="container-page py-12 md:py-16">
+      <section className="container-wide py-12 md:py-16">
         <Link
           href="/"
-          className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono hover:text-polar-white"
+          className="btn-ghost-secondary px-0"
         >
-          ← BACK TO POTS
+          Back to pots
         </Link>
 
-        <div className="mt-8 grid lg:grid-cols-[1fr_400px] gap-12">
+        <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_420px]">
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-6">
-              <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
+              <span className="badge badge-muted">
                 POT.{pot.id}
               </span>
               <StatusBadge status={pot.status} funded={isFunded} ended={ended} />
-              <span className="text-[13px] text-ash-gray text-mono">
+              <span className="badge badge-muted">
                 CREATOR · {shortAddr(pot.creator)}
               </span>
             </div>
 
-            <h1 className="text-[34px] md:text-[44px] font-bold leading-[1.03]">Pot.{pot.id}</h1>
+            <h1 className="display-lg">Pot.{pot.id}</h1>
 
-            <p className="mt-6 text-[15px] text-ash-gray leading-[1.6] max-w-2xl">
+            <p className="mt-6 max-w-2xl body-sm">
               Metadata hash{" "}
-              <span className="font-mono text-polar-white">{pot.metadataHash.slice(0, 12)}…</span>{" "}
+              <span className="font-mono text-[var(--text-primary)]">{pot.metadataHash.slice(0, 12)}…</span>{" "}
               — rich title + story surface once the off-chain metadata service is wired up.
             </p>
 
-            <div className="mt-10 surface-card">
+            <div className="mt-10 surface-raised p-6">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
-                  PROGRESS
-                </span>
-                <span className="text-[13px] text-ash-gray text-mono">
+                <span className="label-caps">PROGRESS</span>
+                <span className="text-[13px] text-[var(--text-tertiary)] text-mono">
                   {pct}%{noTarget ? " (no target)" : " of target"}
                 </span>
               </div>
@@ -118,9 +116,7 @@ export default async function PotDetailPage({ params }: Props) {
                   className="progress-fill"
                   style={{
                     width: `${pct}%`,
-                    background: isFunded
-                      ? "var(--color-amber-glow)"
-                      : "var(--color-neon-green)",
+                    background: isFunded ? "var(--accent)" : "var(--success)",
                   }}
                 />
               </div>
@@ -142,33 +138,33 @@ export default async function PotDetailPage({ params }: Props) {
 
             <div className="mt-10">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-[23px] font-bold leading-[1.11]">Contributor wall</h2>
-                <span className="text-[13px] text-ash-gray text-mono">
+                <h2 className="heading-md">Contributor wall</h2>
+                <span className="badge badge-muted">
                   {contributors.length} TOTAL
                 </span>
               </div>
 
               {contributors.length === 0 ? (
-                <div className="surface-card text-center text-[14px] text-ash-gray text-mono">
+                <div className="surface-card text-center text-[14px] text-[var(--text-tertiary)] text-mono">
                   No contributions yet. Be the first.
                 </div>
               ) : (
-                <ul className="border border-dark-carbon rounded-lg divide-y divide-dark-carbon">
+                <ul className="table-shell divide-y divide-[var(--border-subtle)]">
                   {contributors.map((addr) => (
                     <li
                       key={addr}
-                      className="flex items-center justify-between p-4 bg-deep-space hover:bg-midnight-void transition-colors"
+                      className="flex items-center justify-between p-4 bg-[var(--bg-surface)] hover:bg-[var(--bg-subtle)] transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <span
                           aria-hidden
-                          className="block h-7 w-7 rounded-full bg-dark-carbon shrink-0"
+                          className="block h-7 w-7 rounded-full bg-[var(--bg-subtle)] shrink-0"
                         />
                         <div className="min-w-0">
-                          <div className="text-[14px] text-polar-white text-mono truncate">
+                          <div className="text-[14px] text-[var(--text-primary)] text-mono truncate">
                             {shortAddr(addr)}
                           </div>
-                          <div className="text-[13px] text-ash-gray text-mono truncate">
+                          <div className="text-[13px] text-[var(--text-tertiary)] text-mono truncate">
                             onchain backer
                           </div>
                         </div>
@@ -177,7 +173,7 @@ export default async function PotDetailPage({ params }: Props) {
                         href={`https://celoscan.io/address/${addr}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[12px] text-ash-gray hover:text-polar-white text-mono"
+                        className="text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] text-mono"
                       >
                         celoscan ↗
                       </a>
@@ -188,7 +184,7 @@ export default async function PotDetailPage({ params }: Props) {
             </div>
           </div>
 
-          <aside className="space-y-6 lg:sticky lg:top-24 self-start">
+          <aside className="space-y-5 self-start lg:sticky lg:top-24">
             <ContributeBox potId={pot.id} ended={ended} />
 
             <RefundButton
@@ -207,11 +203,9 @@ export default async function PotDetailPage({ params }: Props) {
             <TagPanel potId={pot.id} />
 
             <div className="surface-card">
-              <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono mb-4 block">
-                SHARE THIS POT
-              </span>
+              <span className="label-caps mb-4 block">SHARE THIS POT</span>
               <ShareButtons potId={pot.id} title={`Pot.${pot.id}`} />
-              <p className="mt-4 text-[13px] text-ash-gray leading-[1.43]">
+              <p className="mt-4 body-sm">
                 Every share appends your wallet as the referrer. Bring 5 in and earn an onchain
                 badge.
               </p>
@@ -296,11 +290,11 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function NotLive({ potId }: { potId: string }) {
   return (
-    <main className="min-h-screen bg-midnight-void text-polar-white">
+    <main className="app-shell">
       <Header />
       <section className="container-page py-24 text-center">
-        <h1 className="text-[34px] font-bold mb-4">Pot.{potId}</h1>
-        <p className="text-[16px] text-ash-gray max-w-md mx-auto leading-[1.5]">
+        <h1 className="heading-lg mb-4">Pot.{potId}</h1>
+        <p className="body-lg max-w-md mx-auto">
           The Pot contract isn&apos;t deployed yet. Once it&apos;s live, this page will pull the
           pot directly from the chain.
         </p>
@@ -317,4 +311,8 @@ function formatCusd(wei: bigint): string {
   const n = Number(formatUnits(wei, 18));
   if (n >= 1000) return `$${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`;
   return `$${n.toFixed(n < 10 ? 2 : 0)}`;
+}
+
+function currentEpochMs() {
+  return Date.now();
 }
