@@ -1,49 +1,47 @@
 import Link from "next/link";
-import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { DotArt } from "@/components/DotArt";
+import { Header } from "@/components/Header";
 import { LivePotsStrip } from "@/components/LivePotsStrip";
 
 const STATS = [
-  { label: "POTS LIVE", value: "412" },
-  { label: "RAISED ALL-TIME", value: "$28.4k" },
-  { label: "CONTRIBUTORS", value: "1,872" },
-  { label: "PLATFORM FEE", value: "0%" },
+  ["Platform fee", "0%"],
+  ["Settlement", "Seconds"],
+  ["Signup", "None"],
+  ["Network", "Celo"],
 ];
 
-const HOW_STEPS = [
-  {
-    n: "01",
-    title: "Create a pot",
-    body:
-      "Title, story, target, deadline. One transaction on Celo, sub-cent gas. Refundable to contributors if the target is missed (you choose).",
-  },
-  {
-    n: "02",
-    title: "Share the link",
-    body:
-      "Drop it in WhatsApp, X, Farcaster, anywhere. Pots open in MiniPay for your phone-first contributors and in any wallet for everyone else.",
-  },
-  {
-    n: "03",
-    title: "Withdraw or refund",
-    body:
-      "Hit your target or pass the deadline — withdraw cUSD straight to your wallet. Miss it? Contributors pull refunds themselves. Zero platform fees.",
-  },
+const HOW = [
+  ["Create", "Set a target, deadline, and refund policy. Pot writes the fundraiser terms onchain."],
+  ["Share", "Send one link through WhatsApp, X, Farcaster, MiniPay, or any wallet browser."],
+  ["Settle", "Withdraw cUSD when funded, or let contributors pull refunds if the rules allow it."],
+];
+
+const BENEFITS = [
+  ["Global by default", "cUSD works across borders without card rails, payout holds, or account approvals."],
+  ["Wallet-native", "Creators and contributors use wallets they already trust. No platform account needed."],
+  ["Transparent escrow", "Raised, target, deadline, refunds, and withdrawals are readable from the contract."],
+  ["No platform fee", "Pot does not take a cut of donations. Contributors see exactly what they are moving."],
+];
+
+const FAQ = [
+  ["Does Pot custody funds?", "No. Funds sit in the Pot smart contract until the fundraiser is withdrawable or refundable."],
+  ["What currency do contributors use?", "Pot is designed around cUSD on Celo, so campaigns settle in a stablecoin."],
+  ["What happens if a target is missed?", "Creators choose the refund policy at creation. Refund-enabled pots let contributors pull funds back after the deadline."],
+  ["Do contributors need an account?", "No. They only need a compatible wallet. The product flow is wallet-native."],
 ];
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-midnight-void text-polar-white">
+    <main className="app-shell">
       <Header />
-
       <Hero />
-      <Stats />
-      <FeaturedPots />
+      <TrustBar />
+      <LiveSection />
       <HowItWorks />
-      <WhyPot />
-      <BeltCta />
-
+      <Benefits />
+      <Security />
+      <FAQSection />
+      <CTA />
       <Footer />
     </main>
   );
@@ -51,78 +49,101 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <section className="relative crosshatch-bg border-b border-dark-carbon">
-      <div className="container-page pt-14 pb-16 md:pt-28 md:pb-32 grid lg:grid-cols-[1fr_auto] gap-12 md:gap-16 items-center">
-        <div>
-          <div className="flex items-center gap-3 mb-10 flex-wrap">
-            <span className="tag-status">
-              <span aria-hidden className="block h-1.5 w-1.5 rounded-full bg-polar-white" />
-              LIVE ON CELO MAINNET
+    <section className="relative overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-72 trust-grid opacity-70" aria-hidden />
+      <div className="container-wide relative grid gap-12 py-16 md:py-24 lg:grid-cols-[1fr_460px] lg:items-center">
+        <div className="max-w-4xl">
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <span className="badge badge-success">
+              <span className="status-dot" aria-hidden />
+              Live on Celo mainnet
             </span>
-            <span className="text-[13px] text-ash-gray text-mono">
-              v0.1 · contracts verified
-            </span>
+            <span className="badge">Verified contracts</span>
+            <span className="badge">cUSD</span>
           </div>
-
-          <h1 className="text-[34px] sm:text-[44px] md:text-[56px] lg:text-[63px] font-bold leading-[1] md:leading-[0.95] tracking-[-0.011em] max-w-3xl text-polar-white">
-            Stablecoin fundraisers
-            <br className="hidden sm:block" />{" "}
-            <span className="text-slate">that work everywhere.</span>
+          <h1 className="display-xl max-w-4xl">
+            GoFundMe, but onchain and settled in stablecoins.
           </h1>
-
-          <p className="mt-6 md:mt-8 max-w-2xl text-base md:text-[18px] text-polar-white leading-[1.4] md:leading-[1.31]">
-            Like GoFundMe, but it works in 66 countries, settles in seconds,
-            and has zero platform fees. Spin up a pot, drop the link in any
-            chat, watch it fill in real time.
+          <p className="mt-6 max-w-2xl body-lg">
+            Pot lets anyone launch a trustworthy fundraiser, collect cUSD globally, and settle
+            funds directly from an onchain escrow with zero platform fees.
           </p>
-
-          <div className="mt-8 md:mt-10 flex flex-wrap items-center gap-3 md:gap-4">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href="/create" className="btn-manifesto">
-              START A POT →
+              Start a pot
             </Link>
-            <Link href="#examples" className="btn-ghost-secondary">
-              VIEW LIVE POTS
+            <Link href="#examples" className="btn-secondary">
+              View live activity
             </Link>
-            <span className="hidden sm:inline text-[13px] text-ash-gray text-mono ml-2">
-              Sub-cent gas · cUSD · MiniPay-ready
-            </span>
+            <span className="body-sm sm:ml-2">No signup · sub-cent gas · wallet-native</span>
           </div>
         </div>
 
-        <div className="hidden lg:flex justify-end items-center">
-          <div className="relative">
-            <div
-              aria-hidden
-              className="absolute -inset-10 rounded-full blur-[80px]"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(231,197,154,0.18), transparent 70%)",
-              }}
-            />
-            <DotArt className="relative w-[360px] h-[360px]" />
-            <div className="relative mt-6 flex items-center justify-between text-[13px] text-mono text-ash-gray">
-              <span>POT.PROTOCOL</span>
-              <span className="text-amber-glow">v0.1.0</span>
-            </div>
-          </div>
-        </div>
+        <ProductPreview />
       </div>
     </section>
   );
 }
 
-function Stats() {
+function ProductPreview() {
   return (
-    <section className="bg-deep-space border-b border-dark-carbon">
-      <div className="container-page grid grid-cols-2 md:grid-cols-4 divide-x divide-dark-carbon">
-        {STATS.map((stat) => (
-          <div key={stat.label} className="py-8 md:py-10 px-4 md:px-6">
-            <div className="text-[11px] md:text-[13px] uppercase text-ash-gray tracking-[0.08em] text-mono mb-2 md:mb-3">
-              {stat.label}
+    <div className="surface-raised overflow-hidden">
+      <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-5 py-4">
+        <div className="flex items-center justify-between">
+          <span className="label-caps">Pot preview</span>
+          <span className="badge badge-success">Active</span>
+        </div>
+      </div>
+      <div className="p-5">
+        <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="label-caps">Medical fund · Lagos</div>
+              <h2 className="mt-3 heading-md">Community surgery support</h2>
             </div>
-            <div className="text-[26px] md:text-[34px] font-bold text-polar-white leading-[1.07] tabular-nums">
-              {stat.value}
-            </div>
+            <span className="badge">POT.0421</span>
+          </div>
+          <div className="mt-6 progress-track">
+            <div className="progress-fill" style={{ width: "74%" }} />
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <PreviewStat label="Raised" value="$7,420" />
+            <PreviewStat label="Target" value="$10,000" />
+            <PreviewStat label="Backers" value="184" />
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-4">
+            <div className="label-caps">Next action</div>
+            <div className="mt-2 font-semibold">Contribute cUSD</div>
+          </div>
+          <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-4">
+            <div className="label-caps">Policy</div>
+            <div className="mt-2 font-semibold">Refundable</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="label-caps">{label}</div>
+      <div className="mt-1 text-xl font-semibold tabular-nums">{value}</div>
+    </div>
+  );
+}
+
+function TrustBar() {
+  return (
+    <section className="border-y border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+      <div className="container-wide grid grid-cols-2 divide-x divide-y divide-[var(--border-subtle)] md:grid-cols-4 md:divide-y-0">
+        {STATS.map(([label, value]) => (
+          <div key={label} className="px-5 py-7">
+            <div className="label-caps">{label}</div>
+            <div className="mt-2 text-2xl font-semibold tabular-nums">{value}</div>
           </div>
         ))}
       </div>
@@ -130,28 +151,23 @@ function Stats() {
   );
 }
 
-function FeaturedPots() {
+function LiveSection() {
   return (
-    <section id="examples" className="section dot-grid-bg">
-      <div className="container-page">
-        <div className="flex items-end justify-between mb-12 gap-6 flex-wrap">
+    <section id="examples" className="section">
+      <div className="container-wide">
+        <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <span aria-hidden className="block h-2 w-2 rounded-full bg-neon-green animate-pulse" />
-              <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
-                LIVE POTS · UPDATING NOW
-              </span>
-            </div>
-            <h2 className="text-[28px] sm:text-[34px] md:text-[44px] font-bold leading-[1.05] md:leading-[1.03]">
-              Real pots, real people,
-              <br className="hidden md:block" /> right now.
-            </h2>
+            <div className="eyebrow">Live activity</div>
+            <h2 className="mt-3 display-lg">Fundraisers with onchain state.</h2>
+            <p className="mt-4 max-w-2xl body-lg">
+              Each pot is a direct contract read: raised amount, target progress, deadline, and
+              settlement status.
+            </p>
           </div>
-          <Link href="/dashboard" className="btn-ghost-secondary">
-            BROWSE ALL →
+          <Link href="/dashboard" className="btn-secondary">
+            Open dashboard
           </Link>
         </div>
-
         <LivePotsStrip />
       </div>
     </section>
@@ -160,51 +176,73 @@ function FeaturedPots() {
 
 function HowItWorks() {
   return (
-    <section
-      id="how"
-      className="section bg-deep-space border-y border-dark-carbon relative"
-    >
-      <div className="container-page">
-        <div className="grid md:grid-cols-[380px_1fr] gap-12">
+    <section id="how" className="section bg-[var(--bg-surface)]">
+      <div className="container-wide grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+        <div>
+          <div className="eyebrow">How it works</div>
+          <h2 className="mt-3 display-lg">A fundraiser flow with contract-grade clarity.</h2>
+          <p className="mt-4 body-lg">
+            Pot keeps the human flow simple while making the money movement explicit.
+          </p>
+        </div>
+        <div className="grid gap-4">
+          {HOW.map(([title, body], index) => (
+            <div key={title} className="surface-card grid gap-4 sm:grid-cols-[4rem_1fr]">
+              <span className="text-mono text-2xl font-semibold text-[var(--accent)]">
+                {(index + 1).toString().padStart(2, "0")}
+              </span>
+              <div>
+                <h3 className="heading-md">{title}</h3>
+                <p className="mt-2 body-sm">{body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Benefits() {
+  return (
+    <section className="section">
+      <div className="container-wide">
+        <div className="max-w-3xl">
+          <div className="eyebrow">Why Pot</div>
+          <h2 className="mt-3 display-lg">Built for money moments that need trust fast.</h2>
+        </div>
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {BENEFITS.map(([title, body]) => (
+            <div key={title} className="surface-card">
+              <h3 className="heading-md">{title}</h3>
+              <p className="mt-3 body-sm">{body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Security() {
+  return (
+    <section id="trust" className="section">
+      <div className="container-wide panel-dark rounded-2xl p-6 md:p-10">
+        <div className="grid gap-10 lg:grid-cols-[1fr_1fr]">
           <div>
-            <div className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono mb-4">
-              HOW IT WORKS
-            </div>
-            <h2 className="text-[34px] font-bold leading-[1.07]">
-              Three steps,
-              <br />
-              one transaction each.
-            </h2>
-            <p className="mt-6 text-[16px] text-ash-gray leading-[1.5] max-w-sm">
-              Built on Celo with cUSD. Audited contracts, sub-cent gas, no
-              custody, no platform fees, no surprise rules.
-            </p>
-
-            <div className="mt-10 hidden md:block">
-              <DotArt className="w-44 h-44 opacity-60" />
-            </div>
+            <div className="eyebrow">Trust architecture</div>
+            <h2 className="mt-3 display-lg">Users can verify what matters before moving money.</h2>
           </div>
-
-          <div className="space-y-4">
-            {HOW_STEPS.map((step) => (
-              <div
-                key={step.n}
-                className="surface-card border-dark-carbon hover:border-amber-glow/60 transition-colors flex flex-col md:flex-row gap-6"
-              >
-                <div className="md:w-20 flex md:flex-col items-center md:items-start gap-3">
-                  <span className="text-mono text-[34px] font-bold text-amber-glow leading-none">
-                    {step.n}
-                  </span>
-                  <span className="hidden md:block h-px w-10 bg-amber-glow/40" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-[23px] font-bold text-polar-white mb-2 leading-[1.11]">
-                    {step.title}
-                  </h3>
-                  <p className="text-[16px] text-ash-gray leading-[1.5]">
-                    {step.body}
-                  </p>
-                </div>
+          <div className="grid gap-3">
+            {[
+              ["Contract visibility", "Campaign terms are stored in the Pot contract and linked from every trust surface."],
+              ["Network clarity", "Celo and cUSD are shown at contribution, creation, and settlement moments."],
+              ["Transaction feedback", "Wallet signing, mining, success, and reset states are explicit across money actions."],
+              ["Refund path", "Refund-enabled campaigns expose pull refunds when the contract says contributors are eligible."],
+            ].map(([title, body]) => (
+              <div key={title} className="rounded-lg border border-[var(--border-inverse)] p-4">
+                <h3 className="font-semibold text-[var(--text-inverse)]">{title}</h3>
+                <p className="mt-1 text-sm text-[rgba(248,250,246,0.72)]">{body}</p>
               </div>
             ))}
           </div>
@@ -214,112 +252,40 @@ function HowItWorks() {
   );
 }
 
-function WhyPot() {
-  const points = [
-    {
-      n: "01",
-      title: "Zero platform fees",
-      body:
-        "GoFundMe takes ~3% + payment processing. Pot takes 0%. Optional 1% protocol fee, hard-capped at 5%, paid only on successful withdrawal.",
-    },
-    {
-      n: "02",
-      title: "Pull-based refunds",
-      body:
-        "Miss your target with refunds enabled and contributors call refund() themselves. No griefing, no trapped funds, no manual customer support.",
-    },
-    {
-      n: "03",
-      title: "Permit-gasless contributions",
-      body:
-        "MiniPay users sign once. The relayer submits. They never need to hold CELO for gas. Open the link, tap contribute, done.",
-    },
-    {
-      n: "04",
-      title: "Verified, paused, recoverable",
-      body:
-        "Sourcify-verified, ReentrancyGuard everywhere, Pausable for emergencies. Even when paused, withdrawals and refunds always go through.",
-    },
-  ];
-
+function FAQSection() {
   return (
-    <section className="section">
+    <section className="section bg-[var(--bg-surface)]">
       <div className="container-page">
-        <div className="max-w-3xl mb-14">
-          <div className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono mb-4">
-            WHY POT?
-          </div>
-          <h2 className="text-[44px] font-bold leading-[1.03]">
-            The fundraiser primitive,
-            <br />
-            stripped to the bone.
-          </h2>
-          <p className="mt-6 text-[18px] text-polar-white leading-[1.31]">
-            Pot is one Solidity contract on Celo, one Next.js frontend, one
-            shareable link. No accounts, no KYC walls for $20 contributions, no
-            &ldquo;we&rsquo;re holding your funds while we review.&rdquo;
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          {points.map((p) => (
-            <div
-              key={p.title}
-              className="surface-card hover:border-amber-glow/60 transition-colors"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-mono text-[13px] uppercase text-amber-glow tracking-[0.1em]">
-                  {p.n}
+        <div className="eyebrow">FAQ</div>
+        <div className="mt-6 divide-y divide-[var(--border-subtle)] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+          {FAQ.map(([q, a]) => (
+            <details key={q} className="group p-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
+                {q}
+                <span className="text-[var(--text-tertiary)] transition-transform group-open:rotate-45">
+                  +
                 </span>
-                <span aria-hidden className="block h-px flex-1 bg-dark-carbon ml-4" />
-              </div>
-              <h3 className="text-[23px] font-bold text-polar-white mb-3 leading-[1.11]">
-                {p.title}
-              </h3>
-              <p className="text-[16px] text-ash-gray leading-[1.5]">{p.body}</p>
-            </div>
+              </summary>
+              <p className="mt-3 body-sm">{a}</p>
+            </details>
           ))}
-        </div>
-
-        <div className="mt-12 flex flex-wrap gap-4">
-          <Link href="/create" className="btn-manifesto">
-            START YOUR FIRST POT →
-          </Link>
-          <a
-            href="https://celoscan.io"
-            target="_blank"
-            rel="noreferrer"
-            className="btn-ghost-secondary"
-          >
-            READ THE CONTRACT
-          </a>
         </div>
       </div>
     </section>
   );
 }
 
-function BeltCta() {
+function CTA() {
   return (
-    <section className="section dot-grid-bg">
-      <div className="container-page">
-        <div className="surface-card flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-8 md:p-10 border-amber-glow/40">
-          <div>
-            <div className="text-[13px] uppercase text-amber-glow tracking-[0.06em] text-mono mb-2">
-              READY WHEN YOU ARE
-            </div>
-            <h3 className="text-[34px] font-bold leading-[1.07] max-w-2xl">
-              Spin up a pot in under 60 seconds.
-            </h3>
-            <p className="mt-3 text-[16px] text-ash-gray max-w-xl">
-              No account, no signup, no fees. Connect a wallet, write a story,
-              share the link.
-            </p>
-          </div>
-          <Link href="/create" className="btn-manifesto whitespace-nowrap">
-            CREATE A POT →
-          </Link>
+    <section className="section-tight">
+      <div className="container-wide surface-raised flex flex-col justify-between gap-6 p-6 md:flex-row md:items-center md:p-8">
+        <div>
+          <div className="eyebrow">Ready when you are</div>
+          <h2 className="mt-2 heading-lg">Launch a pot in under a minute.</h2>
         </div>
+        <Link href="/create" className="btn-manifesto">
+          Create a pot
+        </Link>
       </div>
     </section>
   );
