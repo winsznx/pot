@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { formatUnits } from "viem";
 import {
@@ -70,7 +70,7 @@ function useOwnPots() {
     refetchInterval: 60_000,
   });
 
-  const ids = idsQuery.data ?? [];
+  const ids = useMemo(() => idsQuery.data ?? [], [idsQuery.data]);
 
   const contracts = useMemo(
     () =>
@@ -136,7 +136,7 @@ export function OwnPots() {
   }
 
   return (
-    <ul className="divide-y divide-dark-carbon border border-dark-carbon rounded-lg overflow-hidden">
+    <ul className="table-shell divide-y divide-[var(--border-subtle)]">
       {rows.map(({ id, data }) => {
         const idStr = id.toString().padStart(4, "0");
         const target = Number(formatUnits(data.target, 18));
@@ -145,18 +145,18 @@ export function OwnPots() {
         const ddlMs = Number(data.deadline) * 1000;
         const statusLabel = STATUS[data.status] ?? "Unknown";
         return (
-          <li key={idStr} className="bg-midnight-void px-6 py-5">
+          <li key={idStr} className="bg-[var(--bg-surface)] px-5 py-5 transition-colors hover:bg-[var(--bg-subtle)]">
             <div className="flex items-center gap-4 flex-wrap">
               <Link
                 href={`/p/${idStr}`}
-                className="text-[16px] text-polar-white font-bold hover:text-amber-glow"
+                className="font-semibold text-[var(--text-primary)] hover:text-[var(--accent)]"
               >
                 POT.{idStr}
               </Link>
-              <span className="text-[13px] text-mono uppercase tracking-[0.06em] text-ash-gray">
+              <span className="badge badge-muted">
                 {statusLabel}
               </span>
-              <span className="text-[13px] text-mono text-ash-gray ml-auto">
+              <span className="ml-auto text-[13px] text-mono text-[var(--text-tertiary)]">
                 {data.deadline === 0n ? "OPEN-ENDED" : timeLeft(ddlMs)}
               </span>
             </div>
@@ -164,11 +164,11 @@ export function OwnPots() {
               <div className="progress-fill" style={{ width: `${pct}%` }} />
             </div>
             <div className="mt-2 flex items-center justify-between text-[13px] text-mono">
-              <span className="text-polar-white">
+              <span className="text-[var(--text-primary)]">
                 <span className="font-bold">${raised.toFixed(0)}</span>
-                {target > 0 && <span className="text-ash-gray"> / ${target.toFixed(0)}</span>}
+                {target > 0 && <span className="text-[var(--text-tertiary)]"> / ${target.toFixed(0)}</span>}
               </span>
-              <span className="text-amber-glow">{pct}%</span>
+              <span className="text-[var(--accent)]">{pct}%</span>
             </div>
           </li>
         );
@@ -183,12 +183,22 @@ export function OwnPots() {
  */
 export function OwnPotsSummary() {
   const { isConnected, rows } = useOwnPots();
+  const [nowSec, setNowSec] = useState(0);
+
+  useEffect(() => {
+    const initial = window.setTimeout(() => setNowSec(Math.floor(Date.now() / 1000)), 0);
+    const id = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 60_000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(id);
+    };
+  }, []);
 
   const stats = useMemo(() => {
     let raisedTotal = 0n;
     let active = 0;
     let withdrawable = 0n;
-    const now = BigInt(Math.floor(Date.now() / 1000));
+    const now = BigInt(nowSec);
     for (const { data } of rows) {
       if (data.status === 0) {
         active += 1;
@@ -206,7 +216,7 @@ export function OwnPotsSummary() {
       active,
       withdrawable,
     };
-  }, [rows]);
+  }, [rows, nowSec]);
 
   const formatCusd = (wei: bigint) => {
     const n = Number(formatUnits(wei, 18));
@@ -225,13 +235,11 @@ export function OwnPotsSummary() {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-dark-carbon border border-dark-carbon rounded-lg overflow-hidden">
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--border-subtle)] md:grid-cols-4">
       {tiles.map((t) => (
-        <div key={t.label} className="bg-deep-space p-6">
-          <div className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono mb-3">
-            {t.label}
-          </div>
-          <div className="text-[34px] font-bold text-polar-white leading-[1.07]">
+        <div key={t.label} className="bg-[var(--bg-surface)] p-5 md:p-6">
+          <div className="label-caps mb-3">{t.label}</div>
+          <div className="text-2xl font-semibold leading-none md:text-3xl">
             {isConnected ? t.value : "—"}
           </div>
         </div>
@@ -247,7 +255,6 @@ function Placeholder({
   text: string;
   tone?: "muted" | "warn" | "loading";
 }) {
-  const color =
-    tone === "warn" ? "text-amber-glow" : tone === "loading" ? "text-ash-gray" : "text-ash-gray";
+  const color = tone === "warn" ? "text-[var(--warning)]" : "text-[var(--text-tertiary)]";
   return <div className={`surface-card text-center text-[14px] ${color} text-mono`}>{text}</div>;
 }
