@@ -77,7 +77,7 @@ export function LivePotsStrip() {
 
   if (!isPotDeployed) {
     return (
-      <div className="surface-card text-center text-[14px] text-ash-gray">
+      <div className="surface-card text-center body-sm">
         Pot contract not yet deployed. Live strip will populate once the address is wired.
       </div>
     );
@@ -85,7 +85,7 @@ export function LivePotsStrip() {
 
   if (isLoading || count === 0) {
     return (
-      <div className="surface-card text-center text-[14px] text-ash-gray text-mono">
+      <div className="surface-card text-center text-[14px] text-[var(--text-tertiary)] text-mono">
         {count === 0 ? "No pots yet. Be the first to create one." : "Loading active pots…"}
       </div>
     );
@@ -93,7 +93,7 @@ export function LivePotsStrip() {
 
   if (active.length === 0) {
     return (
-      <div className="surface-card text-center text-[14px] text-ash-gray text-mono">
+      <div className="surface-card text-center text-[14px] text-[var(--text-tertiary)] text-mono">
         No active pots right now.
       </div>
     );
@@ -110,14 +110,14 @@ export function LivePotsStrip() {
           <Link
             key={pot.id}
             href={`/p/${pot.id}`}
-            className="surface-card hover:border-amber-glow/40 transition-colors"
+            className="surface-card transition-colors hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-sm"
           >
             <div className="flex items-center gap-3 mb-4">
-              <span aria-hidden className="block h-2 w-2 rounded-full bg-neon-green" />
-              <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
+              <span aria-hidden className="status-dot text-[var(--success)]" />
+              <span className="label-caps">
                 POT.{pot.id}
               </span>
-              <span className="ml-auto text-[13px] text-ash-gray text-mono">
+              <span className="ml-auto text-[13px] text-[var(--text-tertiary)] text-mono">
                 {pot.deadline === 0n ? "OPEN-ENDED" : timeLeft(ddlMs)}
               </span>
             </div>
@@ -125,11 +125,11 @@ export function LivePotsStrip() {
               <div className="progress-fill" style={{ width: `${pct}%` }} />
             </div>
             <div className="flex items-center justify-between text-[14px]">
-              <span className="text-polar-white text-mono">
+              <span className="text-[var(--text-primary)] text-mono">
                 <span className="font-bold">${raised.toFixed(0)}</span>
-                {target > 0 && <span className="text-ash-gray"> / ${target.toFixed(0)}</span>}
+                {target > 0 && <span className="text-[var(--text-tertiary)]"> / ${target.toFixed(0)}</span>}
               </span>
-              <span className="text-amber-glow text-mono">{pct}%</span>
+              <span className="text-[var(--accent)] text-mono">{pct}%</span>
             </div>
           </Link>
         );
