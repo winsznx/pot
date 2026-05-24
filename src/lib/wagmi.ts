@@ -5,7 +5,7 @@ import { injected, walletConnect } from "wagmi/connectors";
 const wcProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 export const wagmiConfig = createConfig({
-  chains: [celoAlfajores, celo],
+  chains: [celo, celoAlfajores],
   connectors: [
     injected({ shimDisconnect: true }),
     ...(wcProjectId
@@ -38,5 +38,5 @@ declare module "wagmi" {
 
 export const POT_ADDRESS = (process.env.NEXT_PUBLIC_POT_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`;
 export const CUSD_ADDRESS = (process.env.NEXT_PUBLIC_CUSD_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`;
-export const ACTIVE_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? celoAlfajores.id);
+export const ACTIVE_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? celo.id);
 export const isPotDeployed = POT_ADDRESS !== "0x0000000000000000000000000000000000000000";
