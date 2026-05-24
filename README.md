@@ -4,12 +4,18 @@
 
 Onchain pots powered by cUSD on Celo. Spin up a pot, drop the link in any chat, watch it fill in real time.
 
+- Live worker: <https://pot.timjosh507.workers.dev>
+- Network: Celo mainnet (chain id 42220)
+- Pot contract: [`0xEf2DF00E73F37AE499Dd7Eb35E33b776CFBa1502`](https://celoscan.io/address/0xEf2DF00E73F37AE499Dd7Eb35E33b776CFBa1502)
+- Badges contract: [`0xeFdF9073adD638b17EC5259C8Ace640c077b3146`](https://celoscan.io/address/0xeFdF9073adD638b17EC5259C8Ace640c077b3146)
+
 ## Stack
 
-- Next.js 16 (App Router)
-- React 19
+- Next.js 16 (App Router) on Cloudflare Workers via OpenNext
+- React 19 + TypeScript
 - Tailwind CSS v4
-- TypeScript
+- wagmi v3 + viem v2 for chain reads/writes
+- Foundry for the Solidity contracts
 
 ## Develop
 
