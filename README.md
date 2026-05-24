@@ -24,7 +24,41 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3000.
+Open <http://localhost:3000>.
+
+## Build for production
+
+```bash
+pnpm build
+```
+
+## Deploy to Cloudflare Workers
+
+```bash
+pnpm exec opennextjs-cloudflare build
+pnpm exec opennextjs-cloudflare deploy
+```
+
+The build needs `NEXT_PUBLIC_POT_ADDRESS`, `NEXT_PUBLIC_POT_BADGES_ADDRESS`, `NEXT_PUBLIC_CUSD_ADDRESS`, and `NEXT_PUBLIC_CHAIN_ID` inlined at build time.
+
+## Contracts
+
+Solidity sources live in [`contracts/`](./contracts), tests in [`test/`](./test), deploy scripts in [`script/`](./script).
+
+```bash
+forge build
+forge test
+```
+
+## Routes
+
+| Path | Purpose |
+| --- | --- |
+| `/` | Landing + live pots strip |
+| `/create` | Open a new pot |
+| `/p/[potId]` | Public pot detail (contribute, endorse, tip, share) |
+| `/dashboard` | Your pots + check-in streak |
+| `/leaderboard` | All-time on-chain activity, refreshed every 90s |
 
 ## License
 
