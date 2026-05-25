@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConnectButton } from "./ConnectButton";
+import { NetworkSelector } from "./NetworkSelector";
 
 const NAV = [
   { href: "/#how", label: "How it works" },
@@ -36,6 +37,7 @@ export function Header() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
+          <NetworkSelector />
           <Link href="/create" className="hidden sm:inline-flex btn-ghost-secondary">
             Start a pot
           </Link>
