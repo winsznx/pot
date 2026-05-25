@@ -1,17 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
+import { connectStacks, disconnectStacks, readStacksSession } from "@/chain/stacksSession";
 
 function shortAddr(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
 export function ConnectButton() {
+  const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const { connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const [open, setOpen] = useState(false);
+  const [stxAddr, setStxAddr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (kind !== "stacks") return;
+    const t = window.setTimeout(() => {
+      const snap = readStacksSession();
+      setStxAddr(snap.address);
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [kind]);
+
+  const isStacksConnected = useMemo(() => kind === "stacks" && !!stxAddr, [kind, stxAddr]);
+
+  if (kind === "stacks") {
+    if (isStacksConnected && stxAddr) {
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            disconnectStacks();
+            setStxAddr(null);
+          }}
+          className="btn-chat"
+          title="Click to disconnect"
+        >
+          <span aria-hidden className="block h-2 w-2 rounded-full bg-neon-green" />
+          <span className="text-mono">{shortAddr(stxAddr)}</span>
+        </button>
+      );
+    }
+    return (
+      <button
+        type="button"
+        className="btn-chat"
+        onClick={async () => {
+          try {
+            await connectStacks();
+          } finally {
+            const snap = readStacksSession();
+            setStxAddr(snap.address);
+          }
+        }}
+      >
+        CONNECT STACKS
+        <span aria-hidden>→</span>
+      </button>
+    );
+  }
 
   if (isConnected && address) {
     return (
