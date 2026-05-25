@@ -12,7 +12,8 @@ export function useUsdPrice(): { rate: number; loading: boolean; error: string |
 
   useEffect(() => {
     // Placeholder for an on-chain or off-chain feed wiring.
-    setState({ rate: 1, loading: false, error: null });
+    const t = window.setTimeout(() => setState({ rate: 1, loading: false, error: null }), 0);
+    return () => window.clearTimeout(t);
   }, []);
 
   return state;
