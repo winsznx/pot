@@ -1,0 +1,14 @@
+[project]
+name = "pot-stacks"
+description = "Pot — stablecoin fundraisers on Stacks (sBTC settlement)"
+authors = []
+telemetry = false
+cache_dir = "./.cache"
+
+[contracts.pot]
+path = "pot.clar"
+clarity_version = 3
+epoch = 3.0
+
+[repl.analysis]
+passes = ["check_checker"]
