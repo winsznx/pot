@@ -4,13 +4,11 @@ import { useState } from "react";
 import { useStacksSession } from "./useStacksSession";
 
 const FAUCET_CONTRACT =
-  process.env.NEXT_PUBLIC_STACKS_FAUCET_CONTRACT ?? "SP31DP8F8CF2GXSZBHHHK5J6Y061744E1TNFGYWYV.stx-faucet";
+  process.env.NEXT_PUBLIC_STACKS_FAUCET_CONTRACT ??
+  "SP31DP8F8CF2GXSZBHHHK5J6Y061744E1TNFGYWYV.stx-faucet";
 
-/**
- * Calls the stx-faucet `claim` function via @stacks/connect v8's `request`
- * RPC. v8 dropped `openContractCall` + the Network classes — now you pass a
- * string literal network and call `request('stx_callContract', ...)`.
- */
+const STACKS_ENABLED = process.env.NEXT_PUBLIC_STACKS_ENABLED === "1";
+
 export function ClaimStxFaucetButton({ className = "" }: { className?: string }) {
   const { isConnected } = useStacksSession();
   const [pending, setPending] = useState(false);
@@ -22,8 +20,18 @@ export function ClaimStxFaucetButton({ className = "" }: { className?: string })
     setPending(true);
     setErr(null);
     try {
-      const { request } = await import("@stacks/connect");
-      const response = await request("stx_callContract", {
+      if (!STACKS_ENABLED) {
+        const [contract, name] = FAUCET_CONTRACT.split(".");
+        window.open(
+          `https://explorer.hiro.so/txid/${contract}.${name}?chain=mainnet`,
+          "_blank",
+          "noopener,noreferrer",
+        );
+        setErr("Open the Hiro explorer to interact directly (SDK pending re-enable)");
+        return;
+      }
+      const mod = await import("@stacks/connect" /* webpackChunkName: "stacks-connect" */);
+      const response = await mod.request("stx_callContract", {
         contract: FAUCET_CONTRACT as `${string}.${string}`,
         functionName: "claim",
         functionArgs: [],
@@ -48,11 +56,9 @@ export function ClaimStxFaucetButton({ className = "" }: { className?: string })
         {pending ? "Sign in wallet..." : "Claim STX from faucet"}
       </button>
       {txId && (
-        <div className="mt-2 text-xs font-mono opacity-70">
-          tx: {txId.slice(0, 12)}...
-        </div>
+        <div className="mt-2 font-mono text-xs opacity-70">tx: {txId.slice(0, 12)}...</div>
       )}
-      {err && <div className="mt-2 text-xs font-mono text-rose-600">{err}</div>}
+      {err && <div className="mt-2 font-mono text-xs text-rose-600">{err}</div>}
     </div>
   );
 }
