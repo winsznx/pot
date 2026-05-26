@@ -10,5 +10,20 @@ path = "pot.clar"
 clarity_version = 3
 epoch = 3.0
 
+[contracts.stx-faucet]
+path = "stx-faucet.clar"
+clarity_version = 3
+epoch = 3.0
+
+[contracts.pot-badges]
+path = "pot-badges.clar"
+clarity_version = 3
+epoch = 3.0
+
+[contracts.pot-pinboard]
+path = "pot-pinboard.clar"
+clarity_version = 3
+epoch = 3.0
+
 [repl.analysis]
 passes = ["check_checker"]
