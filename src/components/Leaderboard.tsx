@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPublicClient } from "wagmi/actions";
 import { celo } from "wagmi/chains";
@@ -9,6 +9,19 @@ import { potAbi } from "@/lib/abi/pot";
 import { fetchActorAggregates, formatCusd, type ActorEvent } from "@/lib/leaderboard";
 import { shortAddr } from "@/lib/format";
 import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
+import {
+  fetchStacksAggregates,
+  shortStxAddress,
+  type StacksAggregateEntry,
+} from "@/lib/stacksLeaderboard";
+
+type ChainTab = "celo" | "stacks";
+
+const STACKS_CONTRACTS = [
+  "SP31DP8F8CF2GXSZBHHHK5J6Y061744E1TNFGYWYV.pot",
+  "SP31DP8F8CF2GXSZBHHHK5J6Y061744E1TNFGYWYV.pot-pinboard",
+  "SP31DP8F8CF2GXSZBHHHK5J6Y061744E1TNFGYWYV.pot-badges",
+] as const;
 
 const ACTOR_EVENTS: ActorEvent[] = [
   { name: "PotCreated", actorArg: "creator" },
@@ -28,10 +41,20 @@ const ACTOR_EVENTS: ActorEvent[] = [
 
 const PAGE_SIZE = 25;
 
+type Row = {
+  address: string;
+  actions: number;
+  valueLabel: string;
+  lastBlock: string;
+  eventBreakdown: Record<string, number>;
+};
+
 export function Leaderboard() {
   const config = useConfig();
-  const query = useQuery({
-    queryKey: ["pot-leaderboard", celo.id, POT_ADDRESS],
+  const [chain, setChain] = useState<ChainTab>("celo");
+
+  const celoQuery = useQuery({
+    queryKey: ["pot-leaderboard-celo", celo.id, POT_ADDRESS],
     queryFn: async () => {
       const client = getPublicClient(config, { chainId: celo.id });
       if (!client) return [];
@@ -42,17 +65,50 @@ export function Leaderboard() {
         events: ACTOR_EVENTS,
       });
     },
-    enabled: isPotDeployed,
+    enabled: chain === "celo" && isPotDeployed,
     refetchInterval: 90_000,
     staleTime: 60_000,
   });
 
-  const rows = useMemo(() => query.data ?? [], [query.data]);
+  const stacksQuery = useQuery<StacksAggregateEntry[]>({
+    queryKey: ["pot-leaderboard-stacks"],
+    queryFn: () => fetchStacksAggregates({ contractIds: [...STACKS_CONTRACTS], perContractLimit: 50 }),
+    enabled: chain === "stacks",
+    refetchInterval: 90_000,
+    staleTime: 60_000,
+  });
+
+  const rows: Row[] = useMemo(() => {
+    if (chain === "celo") {
+      return (celoQuery.data ?? []).map((r) => ({
+        address: r.address,
+        actions: r.actions,
+        valueLabel: `${formatCusd(r.valueWei)} cUSD`,
+        lastBlock: `#${r.lastBlock.toString()}`,
+        eventBreakdown: r.eventBreakdown,
+      }));
+    }
+    return (stacksQuery.data ?? []).map((r) => ({
+      address: r.address,
+      actions: r.actions,
+      valueLabel: `${(Number(r.microStxMoved) / 1_000_000).toFixed(4)} STX fees`,
+      lastBlock: `#${r.lastBlock}`,
+      eventBreakdown: r.eventBreakdown,
+    }));
+  }, [chain, celoQuery.data, stacksQuery.data]);
+
   const top = useMemo(() => rows.slice(0, PAGE_SIZE), [rows]);
   const totalActions = useMemo(() => rows.reduce((sum, row) => sum + row.actions, 0), [rows]);
-  const totalContributed = useMemo(() => rows.reduce((sum, row) => sum + row.valueWei, 0n), [rows]);
+  const totalContributed = useMemo(() => {
+    if (chain === "celo") {
+      return (celoQuery.data ?? []).reduce((s, r) => s + r.valueWei, 0n);
+    }
+    return (stacksQuery.data ?? []).reduce((s, r) => s + r.microStxMoved, 0n);
+  }, [chain, celoQuery.data, stacksQuery.data]);
+  const isLoading = chain === "celo" ? celoQuery.isLoading : stacksQuery.isLoading;
+  const dataUpdatedAt = chain === "celo" ? celoQuery.dataUpdatedAt : stacksQuery.dataUpdatedAt;
 
-  if (!isPotDeployed) {
+  if (chain === "celo" && !isPotDeployed) {
     return (
       <div className="surface-card p-12 text-center">
         <p className="body-sm text-mono">Pot contract not deployed on this network.</p>
@@ -62,23 +118,30 @@ export function Leaderboard() {
 
   return (
     <div>
-      <StatStrip
-        uau={rows.length}
-        actions={totalActions}
-        contributed={totalContributed}
-        loading={query.isLoading}
-      />
+      <ChainToggle chain={chain} onChange={setChain} />
+
+      <div className="mt-6">
+        <StatStrip
+          uau={rows.length}
+          actions={totalActions}
+          contributed={totalContributed}
+          chain={chain}
+          loading={isLoading}
+        />
+      </div>
 
       <div className="mt-8 table-shell">
         <div className="hidden grid-cols-[70px_1fr_120px_160px_130px] items-center gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-6 py-4 md:grid">
           <div className="label-caps">Rank</div>
           <div className="label-caps">Address</div>
           <div className="label-caps justify-end text-right">Actions</div>
-          <div className="label-caps justify-end text-right">cUSD moved</div>
+          <div className="label-caps justify-end text-right">
+            {chain === "celo" ? "cUSD moved" : "STX fees"}
+          </div>
           <div className="label-caps justify-end text-right">Last block</div>
         </div>
 
-        {query.isLoading ? (
+        {isLoading ? (
           <div className="space-y-3 px-6 py-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-14 skeleton" />
@@ -96,10 +159,14 @@ export function Leaderboard() {
                 className="grid gap-3 px-5 py-5 transition-colors hover:bg-[var(--bg-subtle)] md:grid-cols-[70px_1fr_120px_160px_130px] md:items-center md:gap-4 md:px-6"
               >
                 <RankCell rank={idx + 1} />
-                <AddressCell address={row.address} breakdown={row.eventBreakdown} />
+                <AddressCell
+                  address={row.address}
+                  breakdown={row.eventBreakdown}
+                  chain={chain}
+                />
                 <Metric label="Actions" value={row.actions.toString()} strong />
-                <Metric label="cUSD moved" value={formatCusd(row.valueWei)} />
-                <Metric label="Last block" value={`#${row.lastBlock.toString()}`} />
+                <Metric label={chain === "celo" ? "cUSD" : "STX fees"} value={row.valueLabel} />
+                <Metric label="Last block" value={row.lastBlock} />
               </li>
             ))}
           </ul>
@@ -109,15 +176,50 @@ export function Leaderboard() {
       <div className="mt-4 flex flex-col items-start justify-between gap-2 text-[13px] text-[var(--text-tertiary)] sm:flex-row sm:items-center">
         <p className="text-mono">
           {rows.length > PAGE_SIZE
-            ? `Showing top ${PAGE_SIZE} of ${rows.length} unique addresses`
-            : "Ranked by total on-chain actions"}
+            ? `Showing top ${PAGE_SIZE} of ${rows.length} unique addresses on ${chain}`
+            : `Ranked by total on-chain actions on ${chain}`}
         </p>
-        {query.dataUpdatedAt > 0 && (
+        {dataUpdatedAt > 0 && (
           <p className="text-mono">
-            Indexed at {new Date(query.dataUpdatedAt).toLocaleTimeString()} · refreshes every 90s
+            Indexed at {new Date(dataUpdatedAt).toLocaleTimeString()} · refreshes every 90s
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+function ChainToggle({ chain, onChange }: { chain: ChainTab; onChange: (c: ChainTab) => void }) {
+  const tabs: { id: ChainTab; label: string; hint: string }[] = [
+    { id: "celo", label: "Celo", hint: "cUSD events" },
+    { id: "stacks", label: "Stacks", hint: "Hiro mainnet" },
+  ];
+  return (
+    <div
+      className="inline-flex rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-1"
+      role="tablist"
+      aria-label="Chain selector"
+    >
+      {tabs.map((t) => {
+        const active = t.id === chain;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(t.id)}
+            className={`rounded-full px-4 py-1.5 text-mono text-[12px] transition-colors ${
+              active
+                ? "bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm"
+                : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            {t.label}
+            <span className="ml-2 text-[10px] opacity-60">{t.hint}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -126,18 +228,27 @@ function StatStrip({
   uau,
   actions,
   contributed,
+  chain,
   loading,
 }: {
   uau: number;
   actions: number;
   contributed: bigint;
+  chain: ChainTab;
   loading: boolean;
 }) {
+  const valueLabel = chain === "celo" ? "cUSD moved" : "STX in fees";
+  const valueValue = loading
+    ? "..."
+    : chain === "celo"
+      ? formatCusd(contributed)
+      : (Number(contributed) / 1_000_000).toFixed(4);
+  const networkLabel = chain === "celo" ? "Celo" : "Stacks";
   const stats = [
     { label: "Unique actors", value: loading ? "..." : uau.toString() },
     { label: "Total actions", value: loading ? "..." : actions.toString() },
-    { label: "cUSD moved", value: loading ? "..." : formatCusd(contributed) },
-    { label: "Network", value: "Celo" },
+    { label: valueLabel, value: valueValue },
+    { label: "Network", value: networkLabel },
   ];
 
   return (
@@ -177,20 +288,34 @@ function Metric({ label, value, strong }: { label: string; value: string; strong
   );
 }
 
-function AddressCell({ address, breakdown }: { address: string; breakdown: Record<string, number> }) {
+function AddressCell({
+  address,
+  breakdown,
+  chain,
+}: {
+  address: string;
+  breakdown: Record<string, number>;
+  chain: ChainTab;
+}) {
   const top3 = Object.entries(breakdown)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
 
+  const href =
+    chain === "celo"
+      ? `https://celoscan.io/address/${address}`
+      : `https://explorer.hiro.so/address/${address}?chain=mainnet`;
+  const label = chain === "celo" ? shortAddr(address) : shortStxAddress(address);
+
   return (
     <div className="min-w-0">
       <a
-        href={`https://celoscan.io/address/${address}`}
+        href={href}
         target="_blank"
         rel="noreferrer"
         className="block truncate text-mono font-semibold text-[var(--text-primary)] transition-colors hover:text-[var(--accent)]"
       >
-        {shortAddr(address)}
+        {label}
       </a>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {top3.map(([name, count]) => (
