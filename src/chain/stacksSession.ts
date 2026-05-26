@@ -1,10 +1,11 @@
 "use client";
 
 /**
- * Stacks session shim. We deliberately don't pull @stacks/connect statically
- * into the bundle — the SDK is 1MB+ and pushes the worker over its 1MB gzipped
- * limit. Set `NEXT_PUBLIC_STACKS_ENABLED=1` at build time to wire in the real
- * dynamic import via the lazy loader.
+ * Stacks session shim. @stacks/connect was removed from deps to keep the
+ * Cloudflare worker under the 3 MiB size limit. We read the wallet's
+ * localStorage key directly and open the Hiro web wallet for connect.
+ * Once the worker is on a paid plan (10 MiB) flip this file back to the
+ * dynamic `await import('@stacks/connect')` path.
  */
 
 export type StacksSessionState = {
@@ -23,24 +24,14 @@ export function readStacksSession(): StacksSessionState {
     const stx = data.addresses?.stx?.[0]?.address;
     if (stx) return { isConnected: true, address: stx };
   } catch {
-    /* ignore */
+    /* malformed payload — treat as disconnected */
   }
   return { isConnected: false, address: null };
 }
 
 export async function connectStacks(): Promise<void> {
-  // Lazy CDN-loaded path keeps the worker bundle slim. Falls back to opening
-  // the Hiro web wallet so users can still sign in until @stacks ships
-  // re-enabled.
-  const enabled = process.env.NEXT_PUBLIC_STACKS_ENABLED === "1";
-  if (!enabled) {
-    if (typeof window !== "undefined") {
-      window.open("https://wallet.hiro.so/", "_blank", "noopener,noreferrer");
-    }
-    return;
-  }
-  const mod = await import("@stacks/connect" /* webpackChunkName: "stacks-connect" */);
-  await mod.connect();
+  if (typeof window === "undefined") return;
+  window.open("https://wallet.hiro.so/", "_blank", "noopener,noreferrer");
 }
 
 export async function disconnectStacks(): Promise<void> {
