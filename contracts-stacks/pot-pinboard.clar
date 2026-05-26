@@ -1,4 +1,4 @@
-;; pot-pinboard — anyone can endorse, tag, vote, or flag a pot. No gating
+;; pot-pinboard - anyone can endorse, tag, vote, or flag a pot. No gating
 ;; beyond a tiny anti-spam STX fee (rotateable). Mirrors the EVM pinboard
 ;; functions on Pot.sol.
 
@@ -9,7 +9,7 @@
 (define-data-var endorse-cost uint u10000) ;; 0.01 STX
 (define-data-var pin-cost-per-day uint u50000)
 
-(define-map endorsements { pot-id: uint, who: principal } uint) ;; block-height
+(define-map endorsements { pot-id: uint, who: principal } uint) ;; stacks-block-height
 (define-map pins uint { pinned-until: uint, pinner: principal })
 (define-map votes { pot-id: uint, who: principal } bool)
 (define-map flags { pot-id: uint, who: principal } (buff 32))
@@ -18,7 +18,7 @@
 (define-public (endorse-pot (pot-id uint))
   (let ((cost (var-get endorse-cost)))
     (try! (stx-transfer? cost tx-sender (var-get maintainer)))
-    (map-set endorsements { pot-id: pot-id, who: tx-sender } block-height)
+    (map-set endorsements { pot-id: pot-id, who: tx-sender } stacks-block-height)
     (print { event: "endorsed", pot-id: pot-id, who: tx-sender, cost: cost })
     (ok true)))
 
@@ -42,7 +42,7 @@
 
 (define-public (pin-pot (pot-id uint) (days uint))
   (let ((cost (* (var-get pin-cost-per-day) days))
-        (until (+ block-height (* days u144))))
+        (until (+ stacks-block-height (* days u144))))
     (asserts! (> days u0) ERR-ZERO-AMOUNT)
     (try! (stx-transfer? cost tx-sender (var-get maintainer)))
     (map-set pins pot-id { pinned-until: until, pinner: tx-sender })

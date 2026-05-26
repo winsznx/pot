@@ -1,4 +1,4 @@
-;; pot-badges — NFTs for backer + creator milestones. Anyone with a qualifying
+;; pot-badges - NFTs for backer + creator milestones. Anyone with a qualifying
 ;; pot interaction can mint their badge; no whitelist gating.
 
 (define-non-fungible-token pot-badge uint)
