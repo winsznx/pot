@@ -175,7 +175,7 @@ export default async function PotDetailPage({ params }: Props) {
                         rel="noreferrer"
                         className="text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] text-mono"
                       >
-                        celoscan ↗
+                        explorer ↗
                       </a>
                     </li>
                   ))}

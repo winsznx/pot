@@ -7,27 +7,27 @@ const STATS = [
   ["Platform fee", "0%"],
   ["Settlement", "Seconds"],
   ["Signup", "None"],
-  ["Network", "Celo"],
+  ["Networks", "Celo · Stacks"],
 ];
 
 const HOW = [
-  ["Create", "Set a target, deadline, and refund policy. Pot writes the fundraiser terms onchain."],
-  ["Share", "Send one link through WhatsApp, X, Farcaster, MiniPay, or any wallet browser."],
-  ["Settle", "Withdraw cUSD when funded, or let contributors pull refunds if the rules allow it."],
+  ["Create", "Pick a chain, target, deadline, and refund policy. Pot writes the fundraiser terms straight to a Solidity or Clarity contract."],
+  ["Share", "Send one link through WhatsApp, X, Farcaster, MiniPay, or any compatible wallet browser."],
+  ["Settle", "Withdraw cUSD (Celo) or STX (Stacks) when funded, or let contributors pull refunds if the rules allow it."],
 ];
 
 const BENEFITS = [
-  ["Global by default", "cUSD works across borders without card rails, payout holds, or account approvals."],
-  ["Wallet-native", "Creators and contributors use wallets they already trust. No platform account needed."],
-  ["Transparent escrow", "Raised, target, deadline, refunds, and withdrawals are readable from the contract."],
+  ["Cross-chain by design", "The same pot ships on Celo and Stacks — backers contribute on whichever network they already hold value on."],
+  ["Wallet-native", "Creators and contributors use wallets they already trust. No platform account, no email, no KYC."],
+  ["Transparent escrow", "Raised, target, deadline, refunds, and withdrawals are readable from the contract on either chain."],
   ["No platform fee", "Pot does not take a cut of donations. Contributors see exactly what they are moving."],
 ];
 
 const FAQ = [
-  ["Does Pot custody funds?", "No. Funds sit in the Pot smart contract until the fundraiser is withdrawable or refundable."],
-  ["What currency do contributors use?", "Pot is designed around cUSD on Celo, so campaigns settle in a stablecoin."],
+  ["Does Pot custody funds?", "No. Funds sit in the Pot smart contract — Solidity on Celo, Clarity on Stacks — until the fundraiser is withdrawable or refundable."],
+  ["What currency do contributors use?", "Pot supports cUSD on Celo and STX on Stacks. Creators pick a chain at launch and contributors pay in that chain's native asset."],
   ["What happens if a target is missed?", "Creators choose the refund policy at creation. Refund-enabled pots let contributors pull funds back after the deadline."],
-  ["Do contributors need an account?", "No. They only need a compatible wallet. The product flow is wallet-native."],
+  ["Do contributors need an account?", "No. They only need a compatible wallet — MiniPay, MetaMask, or any EVM wallet on Celo; Leather or Xverse on Stacks."],
 ];
 
 export default function HomePage() {
@@ -56,17 +56,17 @@ function Hero() {
           <div className="mb-6 flex flex-wrap items-center gap-3">
             <span className="badge badge-success">
               <span className="status-dot" aria-hidden />
-              Live on Celo mainnet
+              Live on Celo + Stacks mainnet
             </span>
             <span className="badge">Verified contracts</span>
-            <span className="badge">cUSD</span>
+            <span className="badge">cUSD · STX</span>
           </div>
           <h1 className="display-xl max-w-4xl">
-            GoFundMe, but onchain and settled in stablecoins.
+            GoFundMe, but onchain — on Celo and Stacks.
           </h1>
           <p className="mt-6 max-w-2xl body-lg">
-            Pot lets anyone launch a trustworthy fundraiser, collect cUSD globally, and settle
-            funds directly from an onchain escrow with zero platform fees.
+            Pot lets anyone launch a trustworthy fundraiser, collect cUSD or STX directly from
+            backers, and settle funds out of an onchain escrow with zero platform fees.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href="/create" className="btn-manifesto">
@@ -75,7 +75,7 @@ function Hero() {
             <Link href="#examples" className="btn-secondary">
               View live activity
             </Link>
-            <span className="body-sm sm:ml-2">No signup · sub-cent gas · wallet-native</span>
+            <span className="body-sm sm:ml-2">No signup · cents in gas · wallet-native</span>
           </div>
         </div>
 
@@ -115,7 +115,7 @@ function ProductPreview() {
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-4">
             <div className="label-caps">Next action</div>
-            <div className="mt-2 font-semibold">Contribute cUSD</div>
+            <div className="mt-2 font-semibold">Contribute cUSD · STX</div>
           </div>
           <div className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-4">
             <div className="label-caps">Policy</div>
@@ -236,7 +236,7 @@ function Security() {
           <div className="grid gap-3">
             {[
               ["Contract visibility", "Campaign terms are stored in the Pot contract and linked from every trust surface."],
-              ["Network clarity", "Celo and cUSD are shown at contribution, creation, and settlement moments."],
+              ["Network clarity", "The active chain — Celo (cUSD) or Stacks (STX) — is shown at contribution, creation, and settlement moments."],
               ["Transaction feedback", "Wallet signing, mining, success, and reset states are explicit across money actions."],
               ["Refund path", "Refund-enabled campaigns expose pull refunds when the contract says contributors are eligible."],
             ].map(([title, body]) => (

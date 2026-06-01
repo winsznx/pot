@@ -5,7 +5,7 @@ import { Leaderboard } from "@/components/Leaderboard";
 
 export const metadata: Metadata = {
   title: "Leaderboard · Pot",
-  description: "Top backers, voters, and pinners on Pot. Ranked by total on-chain actions.",
+  description: "Top backers, voters, and pinners on Pot — ranked by total on-chain actions on Celo and Stacks.",
 };
 
 export default function LeaderboardPage() {
@@ -17,20 +17,12 @@ export default function LeaderboardPage() {
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-4xl">
             <div className="eyebrow">Leaderboard · onchain</div>
-            <h1 className="mt-3 display-lg">Protocol activity, ranked like a dashboard.</h1>
+            <h1 className="mt-3 display-lg">Protocol activity, ranked across Celo and Stacks.</h1>
             <p className="mt-4 max-w-2xl body-lg">
               Contributions, matches, endorsements, votes, tags, pins, referrals, and check-ins are
-              grouped by wallet from Pot contract events.
+              grouped by wallet — switch the chain toggle to see Celo (cUSD) or Stacks (STX) activity.
             </p>
           </div>
-          <a
-            href={`https://celoscan.io/address/${process.env.NEXT_PUBLIC_POT_ADDRESS ?? ""}`}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-secondary"
-          >
-            View contract
-          </a>
         </div>
 
         <div className="mt-10">

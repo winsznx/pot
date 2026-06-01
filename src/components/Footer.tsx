@@ -12,7 +12,7 @@ export function Footer() {
             <span className="font-semibold">Pot</span>
           </div>
           <p className="mt-4 body-sm">
-            Global stablecoin fundraisers on Celo. No signup, no custody, no platform fee.
+            Cross-chain fundraisers on Celo and Stacks. No signup, no custody, no platform fee.
           </p>
         </div>
 
@@ -27,9 +27,10 @@ export function Footer() {
         <FooterGroup
           title="Protocol"
           links={[
-            ["Verified contract", "https://celoscan.io"],
-            ["Celo mainnet", "https://celo.org"],
-            ["cUSD settlement", "https://docs.celo.org"],
+            ["Celo contract", "https://celoscan.io"],
+            ["Stacks contract", "https://explorer.hiro.so"],
+            ["cUSD on Celo", "https://celo.org"],
+            ["STX on Stacks", "https://www.stacks.co"],
           ]}
         />
         <div>
@@ -43,8 +44,8 @@ export function Footer() {
       </div>
 
       <div className="container-wide flex flex-col justify-between gap-3 border-t border-[var(--border-subtle)] py-5 text-[13px] text-[var(--text-tertiary)] sm:flex-row">
-        <span>May Proof of Ship · Season 2 · May 2026</span>
-        <span className="text-mono">cUSD · Celo · zero platform fees</span>
+        <span>Proof of Ship · Season 2 · 2026</span>
+        <span className="text-mono">Celo (cUSD) · Stacks (STX) · zero platform fees</span>
       </div>
     </footer>
   );

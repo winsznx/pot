@@ -9,8 +9,8 @@ export function potUrl(potId: bigint | number | string): string {
 }
 
 export function defaultShareText(title?: string): string {
-  if (!title) return "I just opened a pot on Celo. Chip in or share it →";
-  return `${title} — fund it on-chain with cUSD →`;
+  if (!title) return "I just opened a Pot — onchain on Celo and Stacks. Chip in or share it →";
+  return `${title} — fund it onchain on Celo (cUSD) or Stacks (STX) →`;
 }
 
 export function whatsAppLink(text: string, url: string): string {

@@ -21,7 +21,7 @@ export function ShareCard({
   subtitle,
   url,
   amountLabel,
-  brand = "Pot · on Celo",
+  brand = "Pot · Celo + Stacks",
   className = "",
 }: Props) {
   return (

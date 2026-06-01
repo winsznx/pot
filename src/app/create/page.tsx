@@ -118,8 +118,9 @@ export default function CreatePotPage() {
               <h1 className="mt-3 display-lg">Define the terms people can trust.</h1>
             </div>
             <p className="mt-5 max-w-2xl body-lg">
-              One transaction writes the target, deadline, refund policy, and metadata hash to Celo.
-              Make the story specific, then share a wallet-native link.
+              One transaction writes the target, deadline, refund policy, and metadata hash to the
+              chain you pick — Celo (cUSD) or Stacks (STX). Make the story specific, then share a
+              wallet-native link.
             </p>
 
             {!isConnected && (
@@ -159,7 +160,7 @@ export default function CreatePotPage() {
               </Field>
 
               <Field
-                label="TARGET (cUSD)"
+                label="TARGET (cUSD · STX)"
                 hint="Leave blank for no target — pot stays open until you withdraw."
               >
                 <div className="flex flex-wrap items-center gap-3">
@@ -232,7 +233,7 @@ export default function CreatePotPage() {
                     selected={refundIfMissed}
                     onClick={() => setRefundIfMissed(true)}
                     title="REFUND CONTRIBUTORS"
-                    body="If the target isn't reached by the deadline, contributors can pull their cUSD back. You get nothing."
+                    body="If the target isn't reached by the deadline, contributors can pull their funds back from the contract. You get nothing."
                   />
                   <RadioCard
                     selected={!refundIfMissed}
@@ -261,7 +262,7 @@ export default function CreatePotPage() {
                   </button>
                 )}
                 <span className="body-sm text-mono">
-                  {isConnected ? "Sub-cent gas on Celo." : "Connect a wallet first."}
+                  {isConnected ? "Pay cents in gas — Celo or Stacks." : "Connect a wallet first."}
                 </span>
               </div>
             </form>
@@ -422,7 +423,7 @@ function WrongChainBanner({ expected, actual }: { expected: number; actual?: num
       <div className="text-[14px] font-bold text-[var(--warning)]">Wrong network</div>
       <p className="body-sm mt-1">
         Switch your wallet to chain {expected} (currently {actual ?? "unknown"}). Pot only signs on
-        the configured Celo network.
+        the chain you picked for this fundraiser.
       </p>
     </div>
   );
