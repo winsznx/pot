@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StacksStatusCard } from "@/chain/StacksStatusCard";
 import { CheckInButton } from "@/components/CheckInButton";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -41,6 +42,7 @@ export default function DashboardPage() {
           </section>
 
           <aside className="space-y-6">
+            <StacksStatusCard />
             <CheckInButton />
             <div className="surface-card">
               <div className="eyebrow">Settlement rules</div>

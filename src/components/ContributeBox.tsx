@@ -8,6 +8,8 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
+import { CeloOnlyNotice } from "@/components/CeloOnlyNotice";
 import { potAbi } from "@/lib/abi/pot";
 import { CUSD_ADDRESS, POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 
@@ -18,7 +20,22 @@ const PRESETS = [5, 10, 25, 50, 100];
  * Surfaces the in-flight transaction hash so the user can confirm on Celoscan if they want.
  */
 export function ContributeBox({ potId, ended }: { potId: string; ended: boolean }) {
+  const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
+
+  if (kind === "stacks") {
+    return (
+      <div className="surface-card space-y-3">
+        <div className="flex items-center gap-2">
+          <span aria-hidden className="block h-2 w-2 rounded-full bg-neon-green" />
+          <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
+            CONTRIBUTE TO POT.{potId}
+          </span>
+        </div>
+        <CeloOnlyNotice feature="Contributions" />
+      </div>
+    );
+  }
   const [amount, setAmount] = useState<number | "">(10);
   const [anon, setAnon] = useState(false);
   const [name, setName] = useState("");

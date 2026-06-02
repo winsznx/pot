@@ -8,6 +8,8 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
+import { CeloOnlyNotice } from "@/components/CeloOnlyNotice";
 import { potAbi } from "@/lib/abi/pot";
 import { CUSD_ADDRESS, POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 
@@ -21,9 +23,14 @@ const PRESETS = [10, 25, 50, 100];
  * doomed approval.
  */
 export function MatchContributionPanel({ potId, ended }: { potId: string; ended: boolean }) {
+  const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const [backer, setBacker] = useState("");
   const [amount, setAmount] = useState<number>(25);
+
+  if (kind === "stacks") {
+    return <CeloOnlyNotice feature={`Donor matching on POT.${potId}`} />;
+  }
 
   const potIdBn = (() => {
     try {

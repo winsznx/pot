@@ -118,8 +118,20 @@ export default function CreatePotPage() {
     }
     const targetMicroStx =
       target === "" ? 0n : BigInt(Math.floor(Number(target) * 1_000_000));
-    const deadlineBlocks =
-      durationDays === 0 ? 0n : BigInt(durationDays * 144); // ~144 stacks blocks per day
+
+    // Deadline must be an absolute Stacks block height — fetch current tip
+    // from Hiro and add the duration window. 0 = open-ended.
+    let deadlineBlocks = 0n;
+    if (durationDays > 0) {
+      try {
+        const info = await fetch("https://api.hiro.so/v2/info").then((r) => r.json());
+        const tip = BigInt(info?.stacks_tip_height ?? info?.burn_block_height ?? 0);
+        deadlineBlocks = tip + BigInt(durationDays * 144);
+      } catch {
+        setSubmitError("Could not fetch Stacks block height — try again.");
+        return;
+      }
+    }
     const nonce = BigInt(Math.floor(Date.now() / 1000));
     // Reuse the existing metadata hasher with a synthetic 0x address derived
     // from the connected stx principal — keeps the hash format identical to the

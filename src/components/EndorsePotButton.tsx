@@ -7,6 +7,14 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
+import { connectStacks, readStacksSession } from "@/chain/stacksSession";
+import { useStacksWrite } from "@/chain/useStacksWrite";
+import {
+  POT_STX_DEPLOYER,
+  POT_STX_ENDORSE_FN,
+  POT_STX_PINBOARD_CONTRACT,
+} from "@/chain/stacksContracts";
 import { potAbi } from "@/lib/abi/pot";
 import { CUSD_ADDRESS, POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 
@@ -18,7 +26,9 @@ import { CUSD_ADDRESS, POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
  * endorsed this pot.
  */
 export function EndorsePotButton({ potId, ended }: { potId: string; ended: boolean }) {
+  const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
+  const stx = useStacksWrite();
 
   const potIdBn = (() => {
     try {
@@ -68,26 +78,43 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
     );
   }
 
-  function submit() {
-    if (!isConnected || ended) return;
-    if (needsApprove) {
+  async function submit() {
+    if (ended) return;
+
+    if (kind === "celo") {
+      if (!isConnected) return;
+      if (needsApprove) {
+        writeContract({
+          abi: erc20Abi,
+          address: CUSD_ADDRESS,
+          functionName: "approve",
+          args: [POT_ADDRESS, costBn],
+        });
+        return;
+      }
       writeContract({
-        abi: erc20Abi,
-        address: CUSD_ADDRESS,
-        functionName: "approve",
-        args: [POT_ADDRESS, costBn],
+        abi: potAbi,
+        address: POT_ADDRESS,
+        functionName: "endorsePot",
+        args: [potIdBn],
       });
       return;
     }
-    writeContract({
-      abi: potAbi,
-      address: POT_ADDRESS,
-      functionName: "endorsePot",
-      args: [potIdBn],
+
+    let s = readStacksSession();
+    if (!s.isConnected) {
+      s = await connectStacks();
+      if (!s.isConnected) return;
+    }
+    await stx.call({
+      contractAddress: POT_STX_DEPLOYER,
+      contractName: POT_STX_PINBOARD_CONTRACT,
+      functionName: POT_STX_ENDORSE_FN,
+      args: [{ type: "uint", value: potIdBn }],
     });
   }
 
-  const label = (() => {
+  const labelCelo = (() => {
     if (ended) return "POT HAS ENDED";
     if (mining) return needsApprove ? "APPROVING…" : "MINING…";
     if (isPending) return "WAITING FOR WALLET…";
@@ -96,7 +123,16 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
     return needsApprove ? `APPROVE $${costStr} cUSD` : `ENDORSE $${costStr} →`;
   })();
 
-  const disabled = ended || !isConnected || !isPotDeployed || mining || isPending;
+  const labelStacks = stx.pending
+    ? "WAITING FOR STACKS WALLET…"
+    : stx.txid
+      ? "ENDORSED ON STACKS ✓"
+      : "ENDORSE ON STACKS →";
+
+  const label = kind === "celo" ? labelCelo : labelStacks;
+  const disabled =
+    ended ||
+    (kind === "celo" ? !isConnected || !isPotDeployed || mining || isPending : stx.pending);
 
   return (
     <div className="surface-card space-y-3">

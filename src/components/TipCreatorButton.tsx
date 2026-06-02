@@ -8,6 +8,8 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
+import { CeloOnlyNotice } from "@/components/CeloOnlyNotice";
 import { potAbi } from "@/lib/abi/pot";
 import { CUSD_ADDRESS, POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 
@@ -20,8 +22,13 @@ const PRESETS = [1, 5, 10, 25];
  * already withdrawn but still surfaced).
  */
 export function TipCreatorButton({ potId }: { potId: string }) {
+  const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState<number>(5);
+
+  if (kind === "stacks") {
+    return <CeloOnlyNotice feature={`Direct tips on POT.${potId}`} />;
+  }
 
   const potIdBn = (() => {
     try {

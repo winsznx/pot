@@ -1,6 +1,8 @@
 "use client";
 
 import { useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
+import { CeloOnlyNotice } from "@/components/CeloOnlyNotice";
 import { potAbi } from "@/lib/abi/pot";
 import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 
@@ -9,7 +11,12 @@ import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
  * target hit, refundIfMissed = true). Anyone who contributed can call this.
  */
 export function RefundButton({ potId, eligible }: { potId: string; eligible: boolean }) {
+  const { kind } = useChainKind();
   const { isConnected } = useAccount();
+
+  if (kind === "stacks") {
+    return <CeloOnlyNotice feature={`Refunds for POT.${potId}`} />;
+  }
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
   const { isLoading: mining, isSuccess } = useWaitForTransactionReceipt({ hash });
 

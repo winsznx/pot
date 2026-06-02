@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPublicClient } from "wagmi/actions";
 import { celo } from "wagmi/chains";
 import { useConfig } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
 import { potAbi } from "@/lib/abi/pot";
 import { fetchActorAggregates, formatCusd, type ActorEvent } from "@/lib/leaderboard";
 import { shortAddr } from "@/lib/format";
@@ -51,7 +52,19 @@ type Row = {
 
 export function Leaderboard() {
   const config = useConfig();
-  const [chain, setChain] = useState<ChainTab>("celo");
+  const { kind, setKind } = useChainKind();
+  const [chain, setChain] = useState<ChainTab>(kind);
+
+  // Keep the in-page tab and the global header toggle in sync — flipping
+  // either one switches both views, so a user never sees two competing chain
+  // indicators.
+  useEffect(() => {
+    setChain(kind);
+  }, [kind]);
+  const handleChainChange = (next: ChainTab) => {
+    setChain(next);
+    setKind(next);
+  };
 
   const celoQuery = useQuery({
     queryKey: ["pot-leaderboard-celo", celo.id, POT_ADDRESS],
@@ -118,7 +131,7 @@ export function Leaderboard() {
 
   return (
     <div>
-      <ChainToggle chain={chain} onChange={setChain} />
+      <ChainToggle chain={chain} onChange={handleChainChange} />
 
       <div className="mt-6">
         <StatStrip

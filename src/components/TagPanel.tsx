@@ -13,6 +13,14 @@ import { getPublicClient } from "wagmi/actions";
 import { useQuery } from "@tanstack/react-query";
 import { potAbi } from "@/lib/abi/pot";
 import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
+import { connectStacks, readStacksSession } from "@/chain/stacksSession";
+import { useStacksWrite } from "@/chain/useStacksWrite";
+import {
+  POT_STX_DEPLOYER,
+  POT_STX_PINBOARD_CONTRACT,
+  POT_STX_TAG_FN,
+} from "@/chain/stacksContracts";
 
 const LOOKBACK_BLOCKS = 200_000n;
 const MAX_TAG_BYTES = 31;
@@ -24,10 +32,12 @@ const MAX_TAG_BYTES = 31;
  * off-chain by inspecting the tagger's wallet history.
  */
 export function TagPanel({ potId }: { potId: string }) {
+  const { kind } = useChainKind();
   const { isConnected } = useAccount();
   const chainId = useChainId();
   const config = useConfig();
   const [draft, setDraft] = useState("");
+  const stx = useStacksWrite();
 
   const idBn = useMemo(() => {
     try {
@@ -78,23 +88,46 @@ export function TagPanel({ potId }: { potId: string }) {
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
   const { isLoading: mining } = useWaitForTransactionReceipt({ hash });
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isConnected || idBn === null) return;
+    if (idBn === null) return;
     const t = draft.trim().toLowerCase();
     if (!t) return;
     const bytes = new TextEncoder().encode(t);
     if (bytes.length > MAX_TAG_BYTES) return;
-    writeContract({
-      abi: potAbi,
-      address: POT_ADDRESS,
-      functionName: "tagPot",
-      args: [idBn, stringToHex(t, { size: 32 })],
+
+    if (kind === "celo") {
+      if (!isConnected) return;
+      writeContract({
+        abi: potAbi,
+        address: POT_ADDRESS,
+        functionName: "tagPot",
+        args: [idBn, stringToHex(t, { size: 32 })],
+      });
+      setDraft("");
+      return;
+    }
+
+    let s = readStacksSession();
+    if (!s.isConnected) {
+      s = await connectStacks();
+      if (!s.isConnected) return;
+    }
+    await stx.call({
+      contractAddress: POT_STX_DEPLOYER,
+      contractName: POT_STX_PINBOARD_CONTRACT,
+      functionName: POT_STX_TAG_FN,
+      args: [
+        { type: "uint", value: idBn },
+        { type: "buff", value: stringToHex(t, { size: 32 }) },
+      ],
     });
     setDraft("");
   }
 
-  const disabled = !isConnected || !isPotDeployed || idBn === null || mining || isPending;
+  const disabledCelo = !isConnected || !isPotDeployed || idBn === null || mining || isPending;
+  const disabledStacks = idBn === null || stx.pending;
+  const disabled = kind === "celo" ? disabledCelo : disabledStacks;
   const tags = tagsQuery.data ?? [];
 
   return (
