@@ -7,6 +7,14 @@ import { parseUnits, parseEventLogs } from "viem";
 import { useAccount, useChainId, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { useChainKind } from "@/chain/ChainProvider";
+import { connectStacks, readStacksSession } from "@/chain/stacksSession";
+import { useStacksWrite } from "@/chain/useStacksWrite";
+import {
+  POT_STX_CONTRACT,
+  POT_STX_CREATE_FN,
+  POT_STX_DEPLOYER,
+} from "@/chain/stacksContracts";
 import { potAbi } from "@/lib/abi/pot";
 import { POT_ADDRESS, ACTIVE_CHAIN_ID, isPotDeployed } from "@/lib/wagmi";
 import { hashPotMetadata, metadataLooksValid } from "@/lib/metadata";
@@ -22,10 +30,12 @@ const DURATIONS = [
 
 export default function CreatePotPage() {
   const router = useRouter();
+  const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { writeContract, data: txHash, isPending: isSigning, reset } = useWriteContract();
   const { data: receipt, isLoading: isMining } = useWaitForTransactionReceipt({ hash: txHash });
+  const stx = useStacksWrite();
 
   const [title, setTitle] = useState("");
   const [story, setStory] = useState("");
@@ -42,8 +52,10 @@ export default function CreatePotPage() {
   const titleCount = title.length;
   const storyCount = story.length;
   const formValid = metadataLooksValid({ title, story }) && (target === "" || (typeof target === "number" && target >= 0));
-  const canSubmit = formValid && isConnected && isPotDeployed && !isSigning && !isMining;
-  const wrongChain = isConnected && chainId !== ACTIVE_CHAIN_ID;
+  const canSubmitCelo = formValid && isConnected && isPotDeployed && !isSigning && !isMining;
+  const canSubmitStacks = formValid && !stx.pending;
+  const canSubmit = kind === "celo" ? canSubmitCelo : canSubmitStacks;
+  const wrongChain = kind === "celo" && isConnected && chainId !== ACTIVE_CHAIN_ID;
 
   // After tx confirms, parse the PotCreated event for the potId and redirect.
   useEffect(() => {
@@ -65,39 +77,78 @@ export default function CreatePotPage() {
     }
   }, [receipt, router]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError(null);
 
-    if (!isConnected || !address) {
-      setSubmitError("Connect a wallet first.");
-      return;
-    }
-    if (!isPotDeployed) {
-      setSubmitError("Pot contract address isn't configured yet. Set NEXT_PUBLIC_POT_ADDRESS.");
+    if (kind === "celo") {
+      if (!isConnected || !address) {
+        setSubmitError("Connect a wallet first.");
+        return;
+      }
+      if (!isPotDeployed) {
+        setSubmitError("Pot contract address isn't configured yet. Set NEXT_PUBLIC_POT_ADDRESS.");
+        return;
+      }
+
+      const targetWei = target === "" ? 0n : parseUnits(String(target), 18);
+      const deadline = durationDays === 0
+        ? 0n
+        : BigInt(Math.floor(Date.now() / 1000) + durationDays * 24 * 60 * 60);
+      const nonce = BigInt(Math.floor(Date.now() / 1000));
+      const metadataHash = hashPotMetadata({ title, story, creator: address, nonce });
+
+      writeContract({
+        abi: potAbi,
+        address: POT_ADDRESS,
+        functionName: "createPot",
+        args: [targetWei, deadline, refundIfMissed, metadataHash],
+      });
       return;
     }
 
-    const targetWei = target === "" ? 0n : parseUnits(String(target), 18);
-    const deadline = durationDays === 0
-      ? 0n
-      : BigInt(Math.floor(Date.now() / 1000) + durationDays * 24 * 60 * 60);
+    // Stacks branch — STX target in micro-STX, deadline in stacks block height
+    let session = readStacksSession();
+    if (!session.isConnected) {
+      session = await connectStacks();
+      if (!session.isConnected) {
+        setSubmitError("Stacks wallet not connected.");
+        return;
+      }
+    }
+    const targetMicroStx =
+      target === "" ? 0n : BigInt(Math.floor(Number(target) * 1_000_000));
+    const deadlineBlocks =
+      durationDays === 0 ? 0n : BigInt(durationDays * 144); // ~144 stacks blocks per day
     const nonce = BigInt(Math.floor(Date.now() / 1000));
-    const metadataHash = hashPotMetadata({ title, story, creator: address, nonce });
-
-    writeContract({
-      abi: potAbi,
-      address: POT_ADDRESS,
-      functionName: "createPot",
-      args: [targetWei, deadline, refundIfMissed, metadataHash],
+    // Reuse the existing metadata hasher with a synthetic 0x address derived
+    // from the connected stx principal — keeps the hash format identical to the
+    // Celo side so an off-chain index can verify either chain the same way.
+    const synthetic = `0x${"0".repeat(40)}` as `0x${string}`;
+    const hashHex = hashPotMetadata({ title, story, creator: synthetic, nonce });
+    await stx.call({
+      contractAddress: POT_STX_DEPLOYER,
+      contractName: POT_STX_CONTRACT,
+      functionName: POT_STX_CREATE_FN,
+      args: [
+        { type: "uint", value: targetMicroStx },
+        { type: "uint", value: deadlineBlocks },
+        { type: "bool", value: refundIfMissed },
+        { type: "buff", value: hashHex },
+      ],
     });
   }
 
-  const submitLabel = isSigning
-    ? "WAITING FOR WALLET…"
-    : isMining
-      ? "MINING…"
-      : "CREATE POT →";
+  const submitLabel =
+    kind === "stacks"
+      ? stx.pending
+        ? "WAITING FOR STACKS WALLET…"
+        : "CREATE POT ON STACKS →"
+      : isSigning
+        ? "WAITING FOR WALLET…"
+        : isMining
+          ? "MINING…"
+          : "CREATE POT →";
 
   return (
     <main className="app-shell">
