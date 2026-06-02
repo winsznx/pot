@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useChainKind } from "@/chain/ChainProvider";
-import { connectStacks, disconnectStacks, readStacksSession } from "@/chain/stacksSession";
+import {
+  connectStacks,
+  disconnectStacks,
+  isStacksWalletAvailable,
+  readStacksSession,
+} from "@/chain/stacksSession";
 
 function shortAddr(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -16,14 +21,14 @@ export function ConnectButton() {
   const { disconnect } = useDisconnect();
   const [open, setOpen] = useState(false);
   const [stxAddr, setStxAddr] = useState<string | null>(null);
+  const [stxAvail, setStxAvail] = useState<boolean | null>(null);
+  const [stxBusy, setStxBusy] = useState(false);
+  const [stxInstallOpen, setStxInstallOpen] = useState(false);
 
   useEffect(() => {
     if (kind !== "stacks") return;
-    const t = window.setTimeout(() => {
-      const snap = readStacksSession();
-      setStxAddr(snap.address);
-    }, 0);
-    return () => window.clearTimeout(t);
+    setStxAddr(readStacksSession().address);
+    isStacksWalletAvailable().then(setStxAvail);
   }, [kind]);
 
   const isStacksConnected = useMemo(() => kind === "stacks" && !!stxAddr, [kind, stxAddr]);
@@ -33,8 +38,8 @@ export function ConnectButton() {
       return (
         <button
           type="button"
-          onClick={() => {
-            disconnectStacks();
+          onClick={async () => {
+            await disconnectStacks();
             setStxAddr(null);
           }}
           className="btn-chat"
@@ -45,20 +50,71 @@ export function ConnectButton() {
         </button>
       );
     }
+
+    if (stxAvail === false) {
+      return (
+        <div className="relative">
+          <button
+            type="button"
+            className="btn-chat"
+            onClick={() => setStxInstallOpen((v) => !v)}
+          >
+            INSTALL STACKS WALLET
+          </button>
+          {stxInstallOpen && (
+            <div className="absolute right-0 top-full z-50 mt-2 w-72 surface-raised space-y-2 p-3 text-sm">
+              <p className="body-sm text-mono">
+                Pot needs Leather or Xverse to sign Stacks transactions.
+              </p>
+              <a
+                href="https://leather.io/install-extension"
+                target="_blank"
+                rel="noreferrer"
+                className="block rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-2"
+              >
+                Install Leather ↗
+              </a>
+              <a
+                href="https://www.xverse.app/download"
+                target="_blank"
+                rel="noreferrer"
+                className="block rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-3 py-2"
+              >
+                Install Xverse ↗
+              </a>
+              <button
+                type="button"
+                onClick={async () => {
+                  const next = await isStacksWalletAvailable();
+                  setStxAvail(next);
+                  if (next) setStxInstallOpen(false);
+                }}
+                className="block w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2 text-xs"
+              >
+                I just installed one — retry
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <button
         type="button"
-        className="btn-chat"
+        disabled={stxBusy}
+        className="btn-chat disabled:opacity-50"
         onClick={async () => {
+          setStxBusy(true);
           try {
-            await connectStacks();
+            const s = await connectStacks();
+            setStxAddr(s.address);
           } finally {
-            const snap = readStacksSession();
-            setStxAddr(snap.address);
+            setStxBusy(false);
           }
         }}
       >
-        CONNECT STACKS
+        {stxBusy ? "OPENING WALLET…" : "CONNECT STACKS"}
         <span aria-hidden>→</span>
       </button>
     );
