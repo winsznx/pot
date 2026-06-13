@@ -95,7 +95,9 @@ export default function CreatePotPage() {
       const deadline = durationDays === 0
         ? 0n
         : BigInt(Math.floor(Date.now() / 1000) + durationDays * 24 * 60 * 60);
-      const nonce = BigInt(Math.floor(Date.now() / 1000));
+      // Use a strong random nonce so two creators submitting the same
+      // title/story in the same second don't collide on the metadata hash.
+      const nonce = randomBigIntNonce();
       const metadataHash = hashPotMetadata({ title, story, creator: address, nonce });
 
       writeContract({
@@ -132,7 +134,7 @@ export default function CreatePotPage() {
         return;
       }
     }
-    const nonce = BigInt(Math.floor(Date.now() / 1000));
+    const nonce = randomBigIntNonce();
     // Reuse the existing metadata hasher with a synthetic 0x address derived
     // from the connected stx principal — keeps the hash format identical to the
     // Celo side so an off-chain index can verify either chain the same way.
@@ -395,6 +397,22 @@ export default function CreatePotPage() {
       <Footer />
     </main>
   );
+}
+
+/**
+ * 256-bit randomness packed into a bigint. Used as the metadata-hash nonce
+ * so simultaneous creates (same wallet, same second) never collide.
+ */
+function randomBigIntNonce(): bigint {
+  const bytes = new Uint8Array(32);
+  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
+    crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  let out = 0n;
+  for (const b of bytes) out = (out << 8n) | BigInt(b);
+  return out;
 }
 
 function Field({
