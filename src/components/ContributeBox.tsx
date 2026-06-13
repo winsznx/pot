@@ -20,22 +20,11 @@ const PRESETS = [5, 10, 25, 50, 100];
  * Surfaces the in-flight transaction hash so the user can confirm on Celoscan if they want.
  */
 export function ContributeBox({ potId, ended }: { potId: string; ended: boolean }) {
+  // Hooks-first: every wagmi hook MUST run on both chain branches so the
+  // hook order stays stable when the user flips Celo↔Stacks. The Stacks
+  // gate is rendered AFTER the hooks below.
   const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
-
-  if (kind === "stacks") {
-    return (
-      <div className="surface-card space-y-3">
-        <div className="flex items-center gap-2">
-          <span aria-hidden className="block h-2 w-2 rounded-full bg-neon-green" />
-          <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
-            CONTRIBUTE TO POT.{potId}
-          </span>
-        </div>
-        <CeloOnlyNotice feature="Contributions" />
-      </div>
-    );
-  }
   const [amount, setAmount] = useState<number | "">(10);
   const [anon, setAnon] = useState(false);
   const [name, setName] = useState("");
@@ -55,11 +44,28 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
     address: CUSD_ADDRESS,
     functionName: "allowance",
     args: address ? [address, POT_ADDRESS] : undefined,
-    query: { enabled: isConnected && isPotDeployed && !!address },
+    query: { enabled: kind === "celo" && isConnected && isPotDeployed && !!address },
   });
 
   const { writeContract, data: txHash, isPending, reset } = useWriteContract();
-  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash: txHash });
+  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: !!txHash },
+  });
+
+  if (kind === "stacks") {
+    return (
+      <div className="surface-card space-y-3">
+        <div className="flex items-center gap-2">
+          <span aria-hidden className="block h-2 w-2 rounded-full bg-neon-green" />
+          <span className="text-[13px] uppercase text-ash-gray tracking-[0.06em] text-mono">
+            CONTRIBUTE TO POT.{potId}
+          </span>
+        </div>
+        <CeloOnlyNotice feature="Contributions" />
+      </div>
+    );
+  }
 
   const needsApprove = !allowance || (allowance as bigint) < wei;
   const canSubmit =
