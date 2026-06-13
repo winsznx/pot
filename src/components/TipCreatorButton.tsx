@@ -22,13 +22,11 @@ const PRESETS = [1, 5, 10, 25];
  * already withdrawn but still surfaced).
  */
 export function TipCreatorButton({ potId }: { potId: string }) {
+  // Hooks-first: every hook must run on both chain branches so the order
+  // stays stable across chain toggle. The Stacks gate is rendered AFTER.
   const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState<number>(5);
-
-  if (kind === "stacks") {
-    return <CeloOnlyNotice feature={`Direct tips on POT.${potId}`} />;
-  }
 
   const potIdBn = (() => {
     try {
@@ -45,13 +43,20 @@ export function TipCreatorButton({ potId }: { potId: string }) {
     address: CUSD_ADDRESS,
     functionName: "allowance",
     args: address ? [address, POT_ADDRESS] : undefined,
-    query: { enabled: isConnected && isPotDeployed && !!address },
+    query: { enabled: kind === "celo" && isConnected && isPotDeployed && !!address },
   });
 
   const needsApprove = !allowance || (allowance as bigint) < wei;
 
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
-  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
+  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+
+  if (kind === "stacks") {
+    return <CeloOnlyNotice feature={`Direct tips on POT.${potId}`} />;
+  }
 
   function submit() {
     if (!isConnected || amount <= 0) return;
