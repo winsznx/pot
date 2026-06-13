@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConnectButton } from "./ConnectButton";
+import { NavDrawer } from "./NavDrawer";
 import { NetworkSelector } from "./NetworkSelector";
 
 const NAV = [
@@ -42,6 +43,7 @@ export function Header() {
             Start a pot
           </Link>
           <ConnectButton />
+          <NavDrawer />
         </div>
       </div>
     </header>
