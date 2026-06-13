@@ -11,14 +11,19 @@ import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
  * target hit, refundIfMissed = true). Anyone who contributed can call this.
  */
 export function RefundButton({ potId, eligible }: { potId: string; eligible: boolean }) {
+  // Hooks-first: run every hook on both chain branches so the order stays
+  // stable across a chain toggle.
   const { kind } = useChainKind();
   const { isConnected } = useAccount();
+  const { writeContract, data: hash, isPending, reset } = useWriteContract();
+  const { isLoading: mining, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
 
   if (kind === "stacks") {
     return <CeloOnlyNotice feature={`Refunds for POT.${potId}`} />;
   }
-  const { writeContract, data: hash, isPending, reset } = useWriteContract();
-  const { isLoading: mining, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const idBn = (() => {
     try {
