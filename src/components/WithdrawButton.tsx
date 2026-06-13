@@ -11,14 +11,19 @@ import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
  * the pot isn't withdrawable yet — we just surface the wallet's revert reason.
  */
 export function WithdrawButton({ potId, disabled }: { potId: string; disabled?: boolean }) {
+  // Hooks-first: run every hook on both chain branches so the order stays
+  // stable across a chain toggle.
   const { kind } = useChainKind();
   const { isConnected } = useAccount();
+  const { writeContract, data: hash, isPending, reset } = useWriteContract();
+  const { isLoading: mining, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
 
   if (kind === "stacks") {
     return <CeloOnlyNotice feature={`Withdrawals for POT.${potId}`} />;
   }
-  const { writeContract, data: hash, isPending, reset } = useWriteContract();
-  const { isLoading: mining, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const idBn = (() => {
     try {
