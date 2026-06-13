@@ -23,14 +23,12 @@ const PRESETS = [10, 25, 50, 100];
  * doomed approval.
  */
 export function MatchContributionPanel({ potId, ended }: { potId: string; ended: boolean }) {
+  // Hooks-first: run every hook on both chain branches so the order stays
+  // stable across chain toggle. The Stacks gate is rendered AFTER.
   const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const [backer, setBacker] = useState("");
   const [amount, setAmount] = useState<number>(25);
-
-  if (kind === "stacks") {
-    return <CeloOnlyNotice feature={`Donor matching on POT.${potId}`} />;
-  }
 
   const potIdBn = (() => {
     try {
@@ -50,7 +48,7 @@ export function MatchContributionPanel({ potId, ended }: { potId: string; ended:
     address: POT_ADDRESS,
     functionName: "getContribution",
     args: validBacker ? [potIdBn, backer as `0x${string}`] : undefined,
-    query: { enabled: isPotDeployed && validBacker, refetchInterval: 30_000 },
+    query: { enabled: kind === "celo" && isPotDeployed && validBacker, refetchInterval: 30_000 },
   });
 
   const { data: allowance } = useReadContract({
@@ -58,7 +56,7 @@ export function MatchContributionPanel({ potId, ended }: { potId: string; ended:
     address: CUSD_ADDRESS,
     functionName: "allowance",
     args: address ? [address, POT_ADDRESS] : undefined,
-    query: { enabled: isConnected && isPotDeployed && !!address },
+    query: { enabled: kind === "celo" && isConnected && isPotDeployed && !!address },
   });
 
   const needsApprove = !allowance || (allowance as bigint) < wei;
@@ -66,7 +64,14 @@ export function MatchContributionPanel({ potId, ended }: { potId: string; ended:
   const eligibleBacker = validBacker && backerHasContributed > 0n && !isSelf;
 
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
-  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
+  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
+
+  if (kind === "stacks") {
+    return <CeloOnlyNotice feature={`Donor matching on POT.${potId}`} />;
+  }
 
   function submit() {
     if (!isConnected || ended || amount <= 0 || !eligibleBacker) return;
