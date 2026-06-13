@@ -52,19 +52,16 @@ type Row = {
 
 export function Leaderboard() {
   const config = useConfig();
-  const { kind, setKind } = useChainKind();
+  const { kind } = useChainKind();
   const [chain, setChain] = useState<ChainTab>(kind);
 
-  // Keep the in-page tab and the global header toggle in sync — flipping
-  // either one switches both views, so a user never sees two competing chain
-  // indicators.
+  // The HEADER NetworkSelector is the single source of truth for the global
+  // chain kind. The in-page tab follows when the header flips, but flipping
+  // the in-page tab is local-only — it doesn't side-effect the global state
+  // and silently switch contracts on every other route.
   useEffect(() => {
     setChain(kind);
   }, [kind]);
-  const handleChainChange = (next: ChainTab) => {
-    setChain(next);
-    setKind(next);
-  };
 
   const celoQuery = useQuery({
     queryKey: ["pot-leaderboard-celo", celo.id, POT_ADDRESS],
@@ -131,7 +128,7 @@ export function Leaderboard() {
 
   return (
     <div>
-      <ChainToggle chain={chain} onChange={handleChainChange} />
+      <ChainToggle chain={chain} onChange={setChain} />
 
       <div className="mt-6">
         <StatStrip
