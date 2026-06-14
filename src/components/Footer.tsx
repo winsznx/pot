@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { POT_STX_CONTRACT, POT_STX_DEPLOYER } from "@/chain/stacksContracts";
 
 export function Footer() {
+  const potEvm = process.env.NEXT_PUBLIC_POT_ADDRESS;
+  const celoContractHref = potEvm
+    ? `https://celoscan.io/address/${potEvm}`
+    : "https://celoscan.io";
+  const stacksContractHref = `https://explorer.hiro.so/address/${POT_STX_DEPLOYER}.${POT_STX_CONTRACT}?chain=mainnet`;
   return (
     <footer className="mt-20 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)]">
       <div className="container-wide grid gap-10 py-12 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
@@ -27,8 +33,8 @@ export function Footer() {
         <FooterGroup
           title="Protocol"
           links={[
-            ["Celo contract", "https://celoscan.io"],
-            ["Stacks contract", "https://explorer.hiro.so"],
+            ["Celo contract", celoContractHref],
+            ["Stacks contract", stacksContractHref],
             ["cUSD on Celo", "https://celo.org"],
             ["STX on Stacks", "https://www.stacks.co"],
           ]}
