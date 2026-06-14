@@ -35,8 +35,8 @@ export function Footer() {
           links={[
             ["Celo contract", celoContractHref],
             ["Stacks contract", stacksContractHref],
-            ["cUSD on Celo", "https://celo.org"],
-            ["STX on Stacks", "https://www.stacks.co"],
+            ["cUSD on Celo", "https://docs.celo.org/cel0/stablecoin/cusd"],
+            ["STX on Stacks", "https://www.stacks.co/learn/stacks-101"],
           ]}
         />
         <div>
