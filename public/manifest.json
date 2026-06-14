@@ -1,7 +1,7 @@
 {
   "name": "Pot — Stablecoin Fundraisers",
   "short_name": "Pot",
-  "description": "Like GoFundMe, but it works in 66 countries, settles in seconds, and has zero platform fees. Onchain pots powered by cUSD on Celo.",
+  "description": "Like GoFundMe, but every campaign is a contract — settled in cUSD on Celo or STX on Stacks, with zero platform fees and no signup.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#101010",
