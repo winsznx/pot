@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { erc20Abi, formatUnits } from "viem";
 import {
   useAccount,
@@ -56,7 +57,7 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
     },
   });
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     abi: erc20Abi,
     address: CUSD_ADDRESS,
     functionName: "allowance",
@@ -73,6 +74,15 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
     hash,
     query: { enabled: !!hash },
   });
+
+  // Refetch allowance the moment any receipt confirms — without this, after
+  // approve the cached value stays stale and the next click sends another
+  // approve instead of running endorsePot.
+  useEffect(() => {
+    if (confirmed && hash) {
+      void refetchAllowance();
+    }
+  }, [confirmed, hash, refetchAllowance]);
 
   if (alreadyEndorsed) {
     return (
