@@ -42,7 +42,7 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
     abi: potAbi,
     address: POT_ADDRESS,
     functionName: "endorseCost",
-    query: { enabled: isPotDeployed, refetchInterval: 60_000 },
+    query: { enabled: kind === "celo" && isPotDeployed, refetchInterval: 60_000 },
   });
 
   const { data: alreadyEndorsed } = useReadContract({
@@ -50,7 +50,10 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
     address: POT_ADDRESS,
     functionName: "hasEndorsed",
     args: address ? [potIdBn, address] : undefined,
-    query: { enabled: isConnected && isPotDeployed && !!address, refetchInterval: 30_000 },
+    query: {
+      enabled: kind === "celo" && isConnected && isPotDeployed && !!address,
+      refetchInterval: 30_000,
+    },
   });
 
   const { data: allowance } = useReadContract({
@@ -58,7 +61,7 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
     address: CUSD_ADDRESS,
     functionName: "allowance",
     args: address ? [address, POT_ADDRESS] : undefined,
-    query: { enabled: isConnected && isPotDeployed && !!address },
+    query: { enabled: kind === "celo" && isConnected && isPotDeployed && !!address },
   });
 
   const costBn = (cost as bigint | undefined) ?? 0n;
@@ -66,7 +69,10 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
   const costStr = costBn > 0n ? Number(formatUnits(costBn, 18)).toFixed(2) : "—";
 
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
-  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({ hash });
+  const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
 
   if (alreadyEndorsed) {
     return (
