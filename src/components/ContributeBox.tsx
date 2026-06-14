@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { erc20Abi, parseUnits } from "viem";
 import {
   useAccount,
@@ -39,7 +39,7 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
     }
   })();
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     abi: erc20Abi,
     address: CUSD_ADDRESS,
     functionName: "allowance",
@@ -52,6 +52,15 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
     hash: txHash,
     query: { enabled: !!txHash },
   });
+
+  // Refetch the cached allowance the moment the approve receipt confirms so
+  // the next click runs Pot.contribute instead of sending another approve.
+  useEffect(() => {
+    if (confirmed && phase === "approving") {
+      void refetchAllowance();
+      setPhase("contributing");
+    }
+  }, [confirmed, phase, refetchAllowance]);
 
   if (kind === "stacks") {
     return (
