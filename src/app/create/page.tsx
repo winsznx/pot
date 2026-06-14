@@ -326,6 +326,21 @@ export default function CreatePotPage() {
                     RESET
                   </button>
                 )}
+                {stx.txid && (
+                  <a
+                    href={`https://explorer.hiro.so/txid/${stx.txid}?chain=mainnet`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-ghost-secondary text-[13px]"
+                  >
+                    VIEW STACKS TX ↗
+                  </a>
+                )}
+                {stx.error && (
+                  <span className="body-sm text-mono text-[var(--warning)]">
+                    {stx.error}
+                  </span>
+                )}
                 <span className="body-sm text-mono">
                   {isConnected ? "Pay cents in gas — Celo or Stacks." : "Connect a wallet first."}
                 </span>
