@@ -81,12 +81,15 @@ export function TagPanel({ potId }: { potId: string }) {
         .sort((a, b) => b[1] - a[1])
         .map(([t, n]) => `${t}${n > 1 ? ` ·${n}` : ""}`);
     },
-    enabled: isPotDeployed && idBn !== null,
+    enabled: kind === "celo" && isPotDeployed && idBn !== null,
     refetchInterval: 60_000,
   });
 
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
-  const { isLoading: mining } = useWaitForTransactionReceipt({ hash });
+  const { isLoading: mining } = useWaitForTransactionReceipt({
+    hash,
+    query: { enabled: !!hash },
+  });
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
