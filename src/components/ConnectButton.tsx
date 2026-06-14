@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useChainKind } from "@/chain/ChainProvider";
+import { useStacksSession } from "@/chain/useStacksSession";
 import {
   connectStacks,
   disconnectStacks,
   isStacksWalletAvailable,
-  readStacksSession,
 } from "@/chain/stacksSession";
 
 function shortAddr(addr: string) {
@@ -20,14 +20,16 @@ export function ConnectButton() {
   const { connectors, connect, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const [open, setOpen] = useState(false);
-  const [stxAddr, setStxAddr] = useState<string | null>(null);
   const [stxAvail, setStxAvail] = useState<boolean | null>(null);
   const [stxBusy, setStxBusy] = useState(false);
   const [stxInstallOpen, setStxInstallOpen] = useState(false);
+  // Subscribe to the reactive useStacksSession hook instead of a one-shot
+  // read so the button reflects wallet-side disconnects (cross-tab + same-
+  // tab) without staying stuck on the stale principal.
+  const { address: stxAddr } = useStacksSession();
 
   useEffect(() => {
     if (kind !== "stacks") return;
-    setStxAddr(readStacksSession().address);
     isStacksWalletAvailable().then(setStxAvail);
   }, [kind]);
 
@@ -40,7 +42,6 @@ export function ConnectButton() {
           type="button"
           onClick={async () => {
             await disconnectStacks();
-            setStxAddr(null);
           }}
           className="btn-chat"
           title="Click to disconnect"
@@ -107,8 +108,7 @@ export function ConnectButton() {
         onClick={async () => {
           setStxBusy(true);
           try {
-            const s = await connectStacks();
-            setStxAddr(s.address);
+            await connectStacks();
           } finally {
             setStxBusy(false);
           }
