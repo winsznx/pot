@@ -3,6 +3,7 @@ import { celo, celoAlfajores } from "wagmi/chains";
 import { injected, walletConnect } from "wagmi/connectors";
 
 const wcProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://pot.timjosh507.workers.dev";
 
 export const wagmiConfig = createConfig({
   chains: [celo, celoAlfajores],
@@ -15,7 +16,7 @@ export const wagmiConfig = createConfig({
             metadata: {
               name: "Pot",
               description: "Stablecoin fundraisers that work everywhere.",
-              url: "https://pot.timjosh507.workers.dev",
+              url: siteUrl,
               icons: [],
             },
             showQrModal: true,
