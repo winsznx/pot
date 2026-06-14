@@ -34,7 +34,10 @@ export default function CreatePotPage() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { writeContract, data: txHash, isPending: isSigning, reset } = useWriteContract();
-  const { data: receipt, isLoading: isMining } = useWaitForTransactionReceipt({ hash: txHash });
+  const { data: receipt, isLoading: isMining } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: !!txHash },
+  });
   const stx = useStacksWrite();
 
   const [title, setTitle] = useState("");
@@ -400,7 +403,11 @@ export default function CreatePotPage() {
                 <li className="flex justify-between">
                   <span>NETWORK</span>
                   <span className="text-[var(--text-primary)]">
-                    {ACTIVE_CHAIN_ID === 42220 ? "Celo · cUSD" : "Alfajores · cUSD"}
+                    {kind === "stacks"
+                      ? "Stacks · STX"
+                      : ACTIVE_CHAIN_ID === 42220
+                        ? "Celo · cUSD"
+                        : "Alfajores · cUSD"}
                   </span>
                 </li>
               </ul>
