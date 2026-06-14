@@ -11,6 +11,7 @@ import {
 } from "wagmi";
 import { getPublicClient } from "wagmi/actions";
 import { useQuery } from "@tanstack/react-query";
+import { useChainKind } from "@/chain/ChainProvider";
 import { potAbi } from "@/lib/abi/pot";
 import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 import { progress, timeLeft } from "@/lib/format";
@@ -40,13 +41,15 @@ const STATUS = ["Active", "Withdrawn", "Refunded", "Cancelled"] as const;
  * dedupes the underlying getLogs call so we don't pay the round-trip twice.
  */
 function useOwnPots() {
+  const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const config = useConfig();
 
   const idsQuery = useQuery({
-    queryKey: ["own-pots-ids", chainId, address],
+    queryKey: ["own-pots-ids", kind, chainId, address],
     queryFn: async (): Promise<bigint[]> => {
+      if (kind !== "celo") return [];
       if (!address) return [];
       const client = getPublicClient(config, { chainId });
       if (!client) return [];
@@ -66,7 +69,7 @@ function useOwnPots() {
         .map((l) => l.args.potId)
         .filter((x): x is bigint => typeof x === "bigint");
     },
-    enabled: isConnected && isPotDeployed && !!address,
+    enabled: kind === "celo" && isConnected && isPotDeployed && !!address,
     refetchInterval: 60_000,
   });
 
@@ -85,7 +88,7 @@ function useOwnPots() {
 
   const { data: results } = useReadContracts({
     contracts,
-    query: { enabled: contracts.length > 0, refetchInterval: 30_000 },
+    query: { enabled: kind === "celo" && contracts.length > 0, refetchInterval: 30_000 },
   });
 
   const rows: Row[] = useMemo(() => {
@@ -115,8 +118,12 @@ function useOwnPots() {
  * raised, etc. so the table reflects live numbers, not just event payloads.
  */
 export function OwnPots() {
+  const { kind } = useChainKind();
   const { isConnected, rows, isLoading, error, isInitialised } = useOwnPots();
 
+  if (kind === "stacks") {
+    return <Placeholder text="Your Stacks pots aren't indexed on the dashboard yet — switch to Celo to manage Celo pots, or view Stacks activity on the leaderboard." />;
+  }
   if (!isPotDeployed) {
     return (
       <Placeholder text="Pot contract not deployed yet. Your pots will surface here once it goes live." />
@@ -182,6 +189,7 @@ export function OwnPots() {
  * `OwnPots` means the underlying getLogs is fetched exactly once per page load.
  */
 export function OwnPotsSummary() {
+  const { kind } = useChainKind();
   const { isConnected, rows } = useOwnPots();
   const [nowSec, setNowSec] = useState(0);
 
@@ -224,14 +232,12 @@ export function OwnPotsSummary() {
     return `$${n.toFixed(0)}`;
   };
 
+  const liveOnCelo = kind === "celo" && isPotDeployed;
   const tiles: Array<{ label: string; value: string }> = [
-    { label: "POTS YOU CREATED", value: isPotDeployed ? String(stats.count) : "—" },
-    { label: "RAISED ALL-TIME", value: isPotDeployed ? formatCusd(stats.raisedTotal) : "—" },
-    { label: "ACTIVE NOW", value: isPotDeployed ? String(stats.active) : "—" },
-    {
-      label: "WITHDRAWABLE",
-      value: isPotDeployed ? formatCusd(stats.withdrawable) : "—",
-    },
+    { label: "POTS YOU CREATED", value: liveOnCelo ? String(stats.count) : "—" },
+    { label: "RAISED ALL-TIME", value: liveOnCelo ? formatCusd(stats.raisedTotal) : "—" },
+    { label: "ACTIVE NOW", value: liveOnCelo ? String(stats.active) : "—" },
+    { label: "WITHDRAWABLE", value: liveOnCelo ? formatCusd(stats.withdrawable) : "—" },
   ];
 
   return (
