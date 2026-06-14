@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { erc20Abi, parseUnits } from "viem";
 import {
   useAccount,
@@ -38,7 +38,7 @@ export function TipCreatorButton({ potId }: { potId: string }) {
 
   const wei = parseUnits(amount.toString(), 18);
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     abi: erc20Abi,
     address: CUSD_ADDRESS,
     functionName: "allowance",
@@ -53,6 +53,14 @@ export function TipCreatorButton({ potId }: { potId: string }) {
     hash,
     query: { enabled: !!hash },
   });
+
+  // Refetch allowance after any receipt confirms so the post-approve click
+  // runs tipCreator instead of sending a second approve.
+  useEffect(() => {
+    if (confirmed && hash) {
+      void refetchAllowance();
+    }
+  }, [confirmed, hash, refetchAllowance]);
 
   if (kind === "stacks") {
     return <CeloOnlyNotice feature={`Direct tips on POT.${potId}`} />;
