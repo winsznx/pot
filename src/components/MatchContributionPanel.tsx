@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { erc20Abi, isAddress, parseUnits } from "viem";
 import {
   useAccount,
@@ -51,7 +51,7 @@ export function MatchContributionPanel({ potId, ended }: { potId: string; ended:
     query: { enabled: kind === "celo" && isPotDeployed && validBacker, refetchInterval: 30_000 },
   });
 
-  const { data: allowance } = useReadContract({
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
     abi: erc20Abi,
     address: CUSD_ADDRESS,
     functionName: "allowance",
@@ -68,6 +68,14 @@ export function MatchContributionPanel({ potId, ended }: { potId: string; ended:
     hash,
     query: { enabled: !!hash },
   });
+
+  // Refetch allowance after any receipt confirms so the post-approve click
+  // runs matchContribution instead of sending a second approve.
+  useEffect(() => {
+    if (confirmed && hash) {
+      void refetchAllowance();
+    }
+  }, [confirmed, hash, refetchAllowance]);
 
   if (kind === "stacks") {
     return <CeloOnlyNotice feature={`Donor matching on POT.${potId}`} />;
