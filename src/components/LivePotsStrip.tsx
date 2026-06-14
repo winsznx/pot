@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { formatUnits } from "viem";
 import { useReadContract, useReadContracts } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
 import { potAbi } from "@/lib/abi/pot";
 import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 import { progress, timeLeft } from "@/lib/format";
@@ -26,11 +27,13 @@ type PotData = {
  * isn't set, so the landing page keeps rendering during pre-deployment.
  */
 export function LivePotsStrip() {
+  const { kind } = useChainKind();
+
   const { data: nextIdRaw } = useReadContract({
     abi: potAbi,
     address: POT_ADDRESS,
     functionName: "nextPotId",
-    query: { enabled: isPotDeployed, refetchInterval: 30_000 },
+    query: { enabled: kind === "celo" && isPotDeployed, refetchInterval: 30_000 },
   });
 
   const nextId = typeof nextIdRaw === "bigint" ? nextIdRaw : 0n;
@@ -50,7 +53,10 @@ export function LivePotsStrip() {
 
   const { data: results, isLoading } = useReadContracts({
     contracts,
-    query: { enabled: isPotDeployed && count > 0, refetchInterval: 30_000 },
+    query: {
+      enabled: kind === "celo" && isPotDeployed && count > 0,
+      refetchInterval: 30_000,
+    },
   });
 
   const active = useMemo(() => {
@@ -74,6 +80,16 @@ export function LivePotsStrip() {
       deadline: bigint;
     }>;
   }, [results, startId]);
+
+  if (kind === "stacks") {
+    return (
+      <div className="surface-card text-center body-sm">
+        Live activity on Stacks shows up in the leaderboard — switch back to Celo here to see
+        live pots, or open the{" "}
+        <Link href="/leaderboard" className="underline">leaderboard</Link> to see Stacks activity.
+      </div>
+    );
+  }
 
   if (!isPotDeployed) {
     return (
