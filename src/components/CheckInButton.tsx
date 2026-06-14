@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useChainKind } from "@/chain/ChainProvider";
+import { CeloOnlyNotice } from "@/components/CeloOnlyNotice";
 import { potAbi } from "@/lib/abi/pot";
 import { POT_ADDRESS, isPotDeployed } from "@/lib/wagmi";
 
@@ -16,6 +18,7 @@ const COOLDOWN_SEC = 20 * 60 * 60; // matches Pot.CHECK_IN_COOLDOWN
  * it's nicer to gate it client-side too.
  */
 export function CheckInButton() {
+  const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const [nowSec, setNowSec] = useState(0);
 
@@ -33,7 +36,7 @@ export function CheckInButton() {
     address: POT_ADDRESS,
     functionName: "lastCheckIn",
     args: address ? [address] : undefined,
-    query: { enabled: isConnected && isPotDeployed && !!address, refetchInterval: 60_000 },
+    query: { enabled: kind === "celo" && isConnected && isPotDeployed && !!address, refetchInterval: 60_000 },
   });
 
   const { data: streak } = useReadContract({
@@ -41,7 +44,7 @@ export function CheckInButton() {
     address: POT_ADDRESS,
     functionName: "streak",
     args: address ? [address] : undefined,
-    query: { enabled: isConnected && isPotDeployed && !!address, refetchInterval: 60_000 },
+    query: { enabled: kind === "celo" && isConnected && isPotDeployed && !!address, refetchInterval: 60_000 },
   });
 
   const { writeContract, data: hash, isPending, reset } = useWriteContract();
@@ -83,6 +86,10 @@ export function CheckInButton() {
             : !isPotDeployed
               ? "NO CONTRACT"
               : "CHECK IN →";
+
+  if (kind === "stacks") {
+    return <CeloOnlyNotice feature="Daily check-in streak" />;
+  }
 
   return (
     <div className="surface-card flex items-center justify-between gap-4">
