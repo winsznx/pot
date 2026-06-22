@@ -171,13 +171,33 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
       </p>
       {hash && (
         <div className="flex items-center justify-between text-[12px] text-mono text-ash-gray">
-          <span>
-            tx: <span className="text-polar-white">{hash.slice(0, 10)}…</span>
-          </span>
+          <a
+            href={`https://celoscan.io/tx/${hash}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-amber-glow underline hover:text-polar-white"
+          >
+            view tx ↗ ({hash.slice(0, 10)}…)
+          </a>
           <button type="button" onClick={() => reset()} className="underline">
             reset
           </button>
         </div>
+      )}
+      {stx.txid && (
+        <a
+          href={`https://explorer.hiro.so/txid/${stx.txid}?chain=mainnet`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-[12px] text-amber-glow underline hover:text-polar-white"
+        >
+          view stacks tx ↗
+        </a>
+      )}
+      {stx.error && (
+        <p className="text-[12px]" style={{ color: "var(--danger)" }}>
+          {stx.error.split("\n")[0]}
+        </p>
       )}
       {confirmed && (
         <p className="text-[13px] text-neon-green leading-[1.43]">
