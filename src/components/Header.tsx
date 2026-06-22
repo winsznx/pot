@@ -13,7 +13,7 @@ const NAV = [
 export function Header() {
   return (
     <header className="sticky top-3 z-40 px-3">
-      <div className="container-wide nav-frame flex min-h-[72px] items-center justify-between gap-5 px-5 md:px-6">
+      <div className="container-wide nav-frame flex min-h-[60px] md:min-h-[72px] items-center justify-between gap-2 px-3 md:gap-5 md:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Pot home">
           <span
             aria-hidden
