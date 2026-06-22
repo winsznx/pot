@@ -128,12 +128,18 @@ export function TipCreatorButton({ potId }: { potId: string }) {
           </span>
           <input
             className="field-input pl-8 input-mono"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0}
-            step="1"
+            pattern="[0-9]*\.?[0-9]*"
             value={amount}
-            onChange={(e) => setAmount(Math.max(0, Number(e.target.value) || 0))}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === "") return setAmount(0);
+              if (!/^\d*\.?\d*$/.test(v)) return;
+              const n = Number(v);
+              if (!Number.isFinite(n) || n < 0) return;
+              setAmount(n);
+            }}
           />
         </div>
       </div>
