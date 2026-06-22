@@ -121,7 +121,7 @@ export default async function PotDetailPage({ params }: Props) {
                 />
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <Stat label="RAISED" value={formatCusd(pot.raised)} />
                 {!noTarget && <Stat label="TARGET" value={formatCusd(pot.target)} />}
                 <Stat label="CONTRIBUTORS" value={contributors.length.toString()} />
