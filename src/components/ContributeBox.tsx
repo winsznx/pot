@@ -144,14 +144,20 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
           </span>
           <input
             className="field-input pl-8 input-mono"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0}
-            step="1"
+            pattern="[0-9]*\.?[0-9]*"
             value={amount === "" ? "" : amount}
             onChange={(e) => {
               const v = e.target.value;
-              setAmount(v === "" ? "" : Math.max(0, Number(v)));
+              if (v === "") return setAmount("");
+              // Reject scientific notation (1e10), negatives, NaN. Without this
+              // type="number" let users sign a billion-dollar contribute by
+              // typing "1e10" into the field.
+              if (!/^\d*\.?\d*$/.test(v)) return;
+              const n = Number(v);
+              if (!Number.isFinite(n) || n < 0) return;
+              setAmount(n);
             }}
           />
         </div>
