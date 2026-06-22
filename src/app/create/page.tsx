@@ -228,16 +228,18 @@ export default function CreatePotPage() {
               </Field>
 
               <Field
-                label="TARGET (cUSD · STX)"
+                label={kind === "stacks" ? "TARGET (STX)" : "TARGET (cUSD)"}
                 hint="Leave blank for no target — pot stays open until you withdraw."
               >
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="relative flex-1 min-w-[200px]">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ash-gray text-mono">
-                      $
-                    </span>
+                  <div className="relative flex-1 min-w-[160px] sm:min-w-[200px]">
+                    {kind === "celo" ? (
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ash-gray text-mono">
+                        $
+                      </span>
+                    ) : null}
                     <input
-                      className="field-input pl-8 input-mono"
+                      className={`field-input input-mono ${kind === "celo" ? "pl-8" : "pr-12"}`}
                       type="number"
                       inputMode="decimal"
                       min={0}
@@ -249,20 +251,25 @@ export default function CreatePotPage() {
                         setTarget(v === "" ? "" : Math.max(0, Number(v)));
                       }}
                     />
+                    {kind === "stacks" ? (
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-ash-gray text-mono text-[12px]">
+                        STX
+                      </span>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {QUICK_AMOUNTS.map((amount) => (
                       <button
                         key={amount}
                         type="button"
-                    className={`btn-secondary min-h-0 px-4 py-2 text-[13px] ${
+                        className={`btn-secondary min-h-[44px] px-4 py-2 text-[13px] ${
                           target === amount
                             ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]"
                             : ""
                         }`}
                         onClick={() => setTarget(amount)}
                       >
-                        ${amount}
+                        {kind === "celo" ? `$${amount}` : `${amount} STX`}
                       </button>
                     ))}
                   </div>
