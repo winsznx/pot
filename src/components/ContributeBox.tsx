@@ -47,7 +47,8 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
     query: { enabled: kind === "celo" && isConnected && isPotDeployed && !!address },
   });
 
-  const { writeContract, data: txHash, isPending, reset } = useWriteContract();
+  const { writeContract, data: txHash, isPending, reset, error: writeError } =
+    useWriteContract();
   const { isLoading: mining, isSuccess: confirmed } = useWaitForTransactionReceipt({
     hash: txHash,
     query: { enabled: !!txHash },
@@ -55,10 +56,14 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
 
   // Refetch the cached allowance the moment the approve receipt confirms so
   // the next click runs Pot.contribute instead of sending another approve.
+  // Reset phase back to idle once the contribute receipt confirms so the
+  // resting button label stops claiming "MINING…" if mining flickers.
   useEffect(() => {
     if (confirmed && phase === "approving") {
       void refetchAllowance();
       setPhase("contributing");
+    } else if (confirmed && phase === "contributing") {
+      setPhase("idle");
     }
   }, [confirmed, phase, refetchAllowance]);
 
@@ -198,13 +203,23 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
 
       {txHash && (
         <div className="flex items-center justify-between text-[12px] text-ash-gray text-mono">
-          <span>
-            tx: <span className="text-polar-white">{txHash.slice(0, 10)}…</span>
-          </span>
+          <a
+            href={`https://celoscan.io/tx/${txHash}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-amber-glow underline hover:text-polar-white"
+          >
+            view tx ↗ ({txHash.slice(0, 10)}…)
+          </a>
           <button type="button" onClick={() => reset()} className="underline">
             reset
           </button>
         </div>
+      )}
+      {writeError && (
+        <p className="text-[12px]" style={{ color: "var(--danger)" }}>
+          {writeError.message.split("\n")[0]}
+        </p>
       )}
       {confirmed && (
         <p className="text-[13px] text-neon-green leading-[1.43]">
