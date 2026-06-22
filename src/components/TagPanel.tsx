@@ -116,7 +116,7 @@ export function TagPanel({ potId }: { potId: string }) {
       s = await connectStacks();
       if (!s.isConnected) return;
     }
-    await stx.call({
+    const txid = await stx.call({
       contractAddress: POT_STX_DEPLOYER,
       contractName: POT_STX_PINBOARD_CONTRACT,
       functionName: POT_STX_TAG_FN,
@@ -125,7 +125,7 @@ export function TagPanel({ potId }: { potId: string }) {
         { type: "buff", value: stringToHex(t, { size: 32 }) },
       ],
     });
-    setDraft("");
+    if (txid) setDraft("");
   }
 
   const disabledCelo = !isConnected || !isPotDeployed || idBn === null || mining || isPending;
@@ -183,6 +183,11 @@ export function TagPanel({ potId }: { potId: string }) {
         >
           reset
         </button>
+      )}
+      {stx.error && (
+        <p className="text-[12px]" style={{ color: "var(--danger)" }}>
+          {stx.error.split("\n")[0]}
+        </p>
       )}
     </div>
   );
