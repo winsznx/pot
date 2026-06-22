@@ -328,6 +328,16 @@ export default function CreatePotPage() {
                   {submitLabel}
                 </button>
                 {txHash && (
+                  <a
+                    href={`https://celoscan.io/tx/${txHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-ghost-secondary text-[13px]"
+                  >
+                    VIEW CELO TX ↗
+                  </a>
+                )}
+                {txHash && (
                   <button
                     type="button"
                     onClick={() => reset()}
