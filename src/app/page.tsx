@@ -106,7 +106,7 @@ function ProductPreview() {
           <div className="mt-6 progress-track">
             <div className="progress-fill" style={{ width: "74%" }} />
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
             <PreviewStat label="Raised" value="$7,420" />
             <PreviewStat label="Target" value="$10,000" />
             <PreviewStat label="Backers" value="184" />
