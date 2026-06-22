@@ -141,7 +141,7 @@ export function Leaderboard() {
       </div>
 
       <div className="mt-8 table-shell">
-        <div className="hidden grid-cols-[70px_1fr_120px_160px_130px] items-center gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-6 py-4 md:grid">
+        <div className="hidden grid-cols-[70px_1fr_120px_160px_130px] items-center gap-4 border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] px-6 py-4 lg:grid">
           <div className="label-caps">Rank</div>
           <div className="label-caps">Address</div>
           <div className="label-caps justify-end text-right">Actions</div>
@@ -166,7 +166,7 @@ export function Leaderboard() {
             {top.map((row, idx) => (
               <li
                 key={row.address}
-                className="grid gap-3 px-5 py-5 transition-colors hover:bg-[var(--bg-subtle)] md:grid-cols-[70px_1fr_120px_160px_130px] md:items-center md:gap-4 md:px-6"
+                className="grid gap-3 px-5 py-5 transition-colors hover:bg-[var(--bg-subtle)] lg:grid-cols-[70px_1fr_120px_160px_130px] lg:items-center lg:gap-4 lg:px-6"
               >
                 <RankCell rank={idx + 1} />
                 <AddressCell
@@ -226,7 +226,7 @@ function ChainToggle({ chain, onChange }: { chain: ChainTab; onChange: (c: Chain
             }`}
           >
             {t.label}
-            <span className="ml-2 text-[10px] opacity-60">{t.hint}</span>
+            <span className="hidden sm:inline ml-2 text-[10px] opacity-60">{t.hint}</span>
           </button>
         );
       })}
