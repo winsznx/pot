@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { useChainKind } from "@/chain/ChainProvider";
 import { CeloOnlyNotice } from "@/components/CeloOnlyNotice";
@@ -53,6 +53,13 @@ export function CheckInButton() {
     query: { enabled: !!hash },
   });
 
+  // Cancel the pending refetch timer if the component unmounts before the 6s
+  // window passes — otherwise setState fires post-unmount.
+  const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (refetchTimer.current) clearTimeout(refetchTimer.current);
+  }, []);
+
   const lastTs = typeof last === "bigint" ? Number(last) : 0;
   const secondsLeft = lastTs === 0 ? 0 : Math.max(0, lastTs + COOLDOWN_SEC - nowSec);
   const onCooldown = secondsLeft > 0;
@@ -68,7 +75,8 @@ export function CheckInButton() {
       args: [],
     });
     // Optimistically refetch so the cooldown updates fast on confirm.
-    setTimeout(() => {
+    if (refetchTimer.current) clearTimeout(refetchTimer.current);
+    refetchTimer.current = setTimeout(() => {
       refetchLast().catch(() => undefined);
     }, 6_000);
   }
