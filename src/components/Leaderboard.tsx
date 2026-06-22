@@ -219,7 +219,7 @@ function ChainToggle({ chain, onChange }: { chain: ChainTab; onChange: (c: Chain
             role="tab"
             aria-selected={active}
             onClick={() => onChange(t.id)}
-            className={`rounded-full px-4 py-1.5 text-mono text-[12px] transition-colors ${
+            className={`rounded-full px-4 py-1.5 min-h-[44px] text-mono text-[12px] transition-colors ${
               active
                 ? "bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm"
                 : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
