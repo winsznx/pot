@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ContributeBox } from "@/components/ContributeBox";
 import { EndorsePotButton } from "@/components/EndorsePotButton";
+import { ReferralCapture } from "@/components/ReferralCapture";
 import { MatchContributionPanel } from "@/components/MatchContributionPanel";
 import { RefundButton } from "@/components/RefundButton";
 import { ShareButtons } from "@/components/ShareButtons";
@@ -185,6 +186,7 @@ export default async function PotDetailPage({ params }: Props) {
           </div>
 
           <aside className="space-y-5 self-start lg:sticky lg:top-24">
+            <ReferralCapture />
             <ContributeBox potId={pot.id} ended={ended} />
 
             <RefundButton
