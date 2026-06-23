@@ -26,8 +26,6 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
   const { kind } = useChainKind();
   const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState<number | "">(10);
-  const [anon, setAnon] = useState(false);
-  const [name, setName] = useState("");
   const [phase, setPhase] = useState<"idle" | "approving" | "contributing">("idle");
 
   const wei = typeof amount === "number" && amount > 0 ? parseUnits(amount.toString(), 18) : 0n;
@@ -185,26 +183,6 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
         </div>
       </div>
 
-      <div>
-        <span className="field-label">Display name (optional)</span>
-        <input
-          className="field-input"
-          placeholder="ife.eth"
-          value={name}
-          disabled={anon}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <label className="mt-3 flex items-center gap-2 text-[13px] text-ash-gray text-mono cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={anon}
-            onChange={(e) => setAnon(e.target.checked)}
-            className="accent-amber-glow"
-          />
-          CONTRIBUTE ANONYMOUSLY
-        </label>
-      </div>
-
       <button
         type="submit"
         disabled={!canSubmit}
@@ -235,7 +213,7 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
       )}
       {confirmed && (
         <p className="text-[13px] text-neon-green leading-[1.43]">
-          Contribution confirmed. Refresh to see your name on the wall.
+          Contribution confirmed. Refresh to see your wallet on the contributor wall.
         </p>
       )}
 
