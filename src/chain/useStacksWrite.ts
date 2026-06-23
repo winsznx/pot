@@ -180,6 +180,16 @@ export function useStacksWrite(): StacksWriteState & {
 
 function hexToBytes(hex: string): Uint8Array {
   const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
+  // Fail fast on malformed hex: odd length silently truncated the last nibble
+  // via integer division, and parseInt on a non-hex char returns NaN, which
+  // Uint8Array silently coerces to 0 — so a typo'd buff arg used to ship a
+  // zero-padded, wrong-length signed transaction with no error.
+  if (clean.length % 2 !== 0) {
+    throw new Error(`hexToBytes: odd-length hex (${clean.length})`);
+  }
+  if (!/^[0-9a-fA-F]*$/.test(clean)) {
+    throw new Error("hexToBytes: non-hex character in input");
+  }
   const out = new Uint8Array(clean.length / 2);
   for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
   return out;
