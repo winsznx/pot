@@ -67,6 +67,12 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
     }
   }, [confirmed, phase, refetchAllowance]);
 
+  // Drop phase on wallet rejection so the CTA returns to "CONTRIBUTE $X →"
+  // instead of clinging to "APPROVING…".
+  useEffect(() => {
+    if (writeError) setPhase("idle");
+  }, [writeError]);
+
   if (kind === "stacks") {
     return (
       <div className="surface-card space-y-3">
