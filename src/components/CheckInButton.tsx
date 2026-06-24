@@ -113,6 +113,7 @@ export function CheckInButton() {
         type="button"
         onClick={submit}
         disabled={!canSubmit}
+        aria-busy={mining || isPending}
         className="btn-manifesto disabled:opacity-40"
       >
         {label}

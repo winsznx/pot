@@ -198,6 +198,7 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
       <button
         type="submit"
         disabled={!canSubmit}
+        aria-busy={mining || isPending}
         className="btn-manifesto w-full justify-center disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {buttonLabel}
