@@ -38,7 +38,14 @@ export function MatchContributionPanel({ potId, ended }: { potId: string; ended:
     }
   })();
 
-  const wei = parseUnits(amount.toString(), 18);
+  const wei = (() => {
+    if (!(amount > 0)) return 0n;
+    try {
+      return parseUnits(amount.toString(), 18);
+    } catch {
+      return 0n;
+    }
+  })();
   const validBacker = isAddress(backer);
   const isSelf =
     validBacker && address ? backer.toLowerCase() === address.toLowerCase() : false;

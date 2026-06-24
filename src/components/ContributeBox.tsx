@@ -28,7 +28,18 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
   const [amount, setAmount] = useState<number | "">(10);
   const [phase, setPhase] = useState<"idle" | "approving" | "contributing">("idle");
 
-  const wei = typeof amount === "number" && amount > 0 ? parseUnits(amount.toString(), 18) : 0n;
+  // Wrap parseUnits in try/catch: Number.toString() on tiny decimals emits
+  // scientific notation ("1e-16"), and viem's parseUnits regex rejects that
+  // with a synchronous throw at render time which used to crash the whole
+  // panel into an error boundary.
+  const wei = (() => {
+    if (typeof amount !== "number" || amount <= 0) return 0n;
+    try {
+      return parseUnits(amount.toString(), 18);
+    } catch {
+      return 0n;
+    }
+  })();
   const potIdBn = (() => {
     try {
       return BigInt(potId);
