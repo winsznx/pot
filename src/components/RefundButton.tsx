@@ -73,6 +73,7 @@ export function RefundButton({ potId, eligible }: { potId: string; eligible: boo
         type="button"
         onClick={submit}
         disabled={!canSubmit}
+        aria-busy={mining || isPending}
         className="btn-manifesto w-full justify-center disabled:opacity-40"
       >
         {label}

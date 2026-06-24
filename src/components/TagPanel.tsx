@@ -170,6 +170,7 @@ export function TagPanel({ potId }: { potId: string }) {
         <button
           type="submit"
           disabled={disabled || draft.trim().length === 0}
+          aria-busy={mining || isPending}
           className="btn-ghost-secondary text-[13px] border border-dark-carbon disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {mining ? "MINING" : isPending ? "SIGN" : "TAG"}

@@ -162,6 +162,7 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
         type="button"
         onClick={submit}
         disabled={disabled}
+        aria-busy={mining || isPending}
         className="btn-manifesto w-full justify-center disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {label}
