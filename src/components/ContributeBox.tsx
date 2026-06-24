@@ -170,6 +170,7 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
             <button
               key={p}
               type="button"
+              aria-pressed={amount === p}
               className={`px-4 py-2 rounded-lg text-[13px] text-mono border transition-colors ${
                 amount === p
                   ? "border-amber-glow text-amber-glow"

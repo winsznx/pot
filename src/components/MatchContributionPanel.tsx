@@ -145,6 +145,7 @@ export function MatchContributionPanel({ potId, ended }: { potId: string; ended:
               key={p}
               type="button"
               onClick={() => setAmount(p)}
+              aria-pressed={amount === p}
               className={`px-3 py-1.5 min-h-[44px] rounded-lg text-[13px] text-mono border transition-colors ${
                 amount === p
                   ? "border-amber-glow text-amber-glow"
