@@ -8,39 +8,55 @@ export const contentType = "image/png";
 
 const NOT_FOUND_BG = "#101010";
 
+// Strip anything that isn't safe to feed into Satori's font rasteriser — the
+// previous version interpolated the raw URL potId, so /p/<long-unicode>/og
+// would trip on glyphs missing from the loaded font and throw a 500 to the OG
+// crawler. Clamp to ascii-decimal of reasonable length.
+function safePotIdLabel(raw: string): string {
+  const stripped = raw.replace(/[^0-9]/g, "").slice(0, 20);
+  return stripped || "—";
+}
+
+async function renderFallback(potId: string) {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          gap: 12,
+          background: NOT_FOUND_BG,
+          color: "#F3F3F3",
+          fontSize: 56,
+          fontFamily: "Inter, system-ui",
+        }}
+      >
+        <div style={{ fontSize: 24, color: "#949494" }}>Pot.{safePotIdLabel(potId)}</div>
+        <div>Not yet on chain</div>
+      </div>
+    ),
+    size,
+  );
+}
+
 export default async function Image({
   params,
 }: {
   params: Promise<{ potId: string }>;
 }) {
   const { potId } = await params;
-  const pot = await fetchPot(potId);
+  // Wrap the entire response in try/catch so OG crawlers get a fallback PNG
+  // instead of a 500 if Satori/fetchPot/font-load throws.
+  try {
+    const pot = await fetchPot(potId);
 
-  if (!pot) {
-    return new ImageResponse(
-      (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            gap: 12,
-            background: NOT_FOUND_BG,
-            color: "#F3F3F3",
-            fontSize: 56,
-            fontFamily: "Inter, system-ui",
-          }}
-        >
-          <div style={{ fontSize: 24, color: "#949494" }}>Pot.{potId}</div>
-          <div>Not yet on chain</div>
-        </div>
-      ),
-      size,
-    );
-  }
+    if (!pot) {
+      return await renderFallback(potId);
+    }
 
   const target = Number(formatUnits(pot.target, 18));
   const raised = Number(formatUnits(pot.raised, 18));
@@ -49,6 +65,7 @@ export default async function Image({
   const accent = isFunded ? "#E7C59A" : "#00AC5C";
   const statusLabel = pot.status === "Active" ? (isFunded ? "TARGET REACHED" : "ACTIVE") : pot.status.toUpperCase();
 
+  const potLabel = safePotIdLabel(pot.id);
   return new ImageResponse(
     (
       <div
@@ -97,7 +114,7 @@ export default async function Image({
               color: "#949494",
             }}
           >
-            POT.{pot.id}
+            POT.{potLabel}
           </div>
         </div>
 
@@ -110,7 +127,7 @@ export default async function Image({
             display: "flex",
           }}
         >
-          Pot.{pot.id}
+          Pot.{potLabel}
         </div>
         <div
           style={{
@@ -165,4 +182,7 @@ export default async function Image({
     ),
     size,
   );
+  } catch {
+    return await renderFallback(potId);
+  }
 }
