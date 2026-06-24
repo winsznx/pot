@@ -39,7 +39,7 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
     }
   })();
 
-  const { data: cost } = useReadContract({
+  const { data: cost, refetch: refetchCost } = useReadContract({
     abi: potAbi,
     address: POT_ADDRESS,
     functionName: "endorseCost",
@@ -99,12 +99,22 @@ export function EndorsePotButton({ potId, ended }: { potId: string; ended: boole
 
     if (kind === "celo") {
       if (!isConnected) return;
+      // Re-read endorseCost right before approve so an admin price-bump
+      // landing inside the 60s refetch window doesn't have the user approve
+      // less than the contract will demand on endorsePot.
+      let liveCost = costBn;
       if (needsApprove) {
+        try {
+          const fresh = await refetchCost();
+          if (typeof fresh.data === "bigint") liveCost = fresh.data;
+        } catch {
+          /* keep cached costBn */
+        }
         writeContract({
           abi: erc20Abi,
           address: CUSD_ADDRESS,
           functionName: "approve",
-          args: [POT_ADDRESS, costBn],
+          args: [POT_ADDRESS, liveCost],
         });
         return;
       }
