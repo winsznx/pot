@@ -49,14 +49,16 @@ export default async function Image({
   params: Promise<{ potId: string }>;
 }) {
   const { potId } = await params;
-  // Wrap the entire response in try/catch so OG crawlers get a fallback PNG
-  // instead of a 500 if Satori/fetchPot/font-load throws.
+  let pot: Awaited<ReturnType<typeof fetchPot>>;
   try {
-    const pot = await fetchPot(potId);
+    pot = await fetchPot(potId);
+  } catch {
+    return await renderFallback(potId);
+  }
 
-    if (!pot) {
-      return await renderFallback(potId);
-    }
+  if (!pot) {
+    return await renderFallback(potId);
+  }
 
   const target = Number(formatUnits(pot.target, 18));
   const raised = Number(formatUnits(pot.raised, 18));
@@ -182,7 +184,4 @@ export default async function Image({
     ),
     size,
   );
-  } catch {
-    return await renderFallback(potId);
-  }
 }
