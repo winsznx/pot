@@ -15,8 +15,9 @@ export function ShareButtons({ potId, title }: { potId: string; title: string })
   // emit identical URLs — reading window.location at render time produced a
   // React 19 hydration mismatch on any non-default deploy URL.
   useEffect(() => {
-    setOrigin(window.location.origin);
+    const originTimer = window.setTimeout(() => setOrigin(window.location.origin), 0);
     return () => {
+      window.clearTimeout(originTimer);
       if (copyTimer.current) clearTimeout(copyTimer.current);
     };
   }, []);

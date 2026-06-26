@@ -68,18 +68,24 @@ export function ContributeBox({ potId, ended }: { potId: string; ended: boolean 
   // Reset phase back to idle once the contribute receipt confirms so the
   // resting button label stops claiming "MINING…" if mining flickers.
   useEffect(() => {
+    let nextPhase: typeof phase | null = null;
     if (confirmed && phase === "approving") {
       void refetchAllowance();
-      setPhase("contributing");
+      nextPhase = "contributing";
     } else if (confirmed && phase === "contributing") {
-      setPhase("idle");
+      nextPhase = "idle";
     }
+    if (!nextPhase) return;
+    const id = window.setTimeout(() => setPhase(nextPhase), 0);
+    return () => window.clearTimeout(id);
   }, [confirmed, phase, refetchAllowance]);
 
   // Drop phase on wallet rejection so the CTA returns to "CONTRIBUTE $X →"
   // instead of clinging to "APPROVING…".
   useEffect(() => {
-    if (writeError) setPhase("idle");
+    if (!writeError) return;
+    const id = window.setTimeout(() => setPhase("idle"), 0);
+    return () => window.clearTimeout(id);
   }, [writeError]);
 
   if (kind === "stacks") {

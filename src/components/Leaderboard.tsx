@@ -60,7 +60,8 @@ export function Leaderboard() {
   // the in-page tab is local-only — it doesn't side-effect the global state
   // and silently switch contracts on every other route.
   useEffect(() => {
-    setChain(kind);
+    const id = window.setTimeout(() => setChain(kind), 0);
+    return () => window.clearTimeout(id);
   }, [kind]);
 
   const celoQuery = useQuery({
