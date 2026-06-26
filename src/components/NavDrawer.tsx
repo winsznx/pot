@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { ConnectButton } from "./ConnectButton";
+import { NetworkSelector } from "./NetworkSelector";
 
 const LINKS = [
   { href: "/#how", label: "How it works" },
@@ -27,6 +29,7 @@ export function NavDrawer() {
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
+    const trigger = triggerRef.current;
     document.body.style.overflow = "hidden";
 
     // Move focus into the dialog on open.
@@ -62,7 +65,7 @@ export function NavDrawer() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKey);
       // Restore focus to the trigger so the user lands back where they were.
-      triggerRef.current?.focus();
+      trigger?.focus();
     };
   }, [open]);
 
@@ -75,13 +78,13 @@ export function NavDrawer() {
         aria-label="Open menu"
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="grid h-10 w-10 place-items-center rounded-lg border border-[var(--border-subtle)] md:hidden"
+        className="grid h-10 w-10 place-items-center rounded-lg border border-[var(--border-subtle)] lg:hidden"
       >
         <span aria-hidden className="text-lg leading-none">☰</span>
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[80] md:hidden">
+        <div className="fixed inset-0 z-[80] lg:hidden">
           {/* Backdrop: aria-hidden div + onClick so it doesn't enter the tab
               order in front of the dialog (the previous <button> backdrop made
               Tab land on "Close menu" first, and Shift-Tab from inside escaped
@@ -111,6 +114,10 @@ export function NavDrawer() {
               </button>
             </div>
             <nav className="mt-4 flex flex-col">
+              <div className="mb-4 grid gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] p-3">
+                <NetworkSelector />
+                <ConnectButton />
+              </div>
               {LINKS.map((link) => (
                 <Link
                   key={link.href}

@@ -13,7 +13,7 @@ const NAV = [
 export function Header() {
   return (
     <header className="sticky top-3 z-40 px-3">
-      <div className="container-wide nav-frame flex min-h-[60px] md:min-h-[72px] items-center justify-between gap-2 px-3 md:gap-5 md:px-6">
+      <div className="container-wide nav-frame flex min-h-[60px] lg:min-h-[72px] items-center justify-between gap-2 px-3 lg:gap-5 lg:px-6">
         <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Pot home">
           <span
             aria-hidden
@@ -29,7 +29,7 @@ export function Header() {
           </span>
         </Link>
 
-        <nav aria-label="Primary navigation" className="hidden items-center gap-2 rounded-full bg-[var(--bg-subtle)] p-1 md:flex">
+        <nav aria-label="Primary navigation" className="hidden items-center gap-2 rounded-full bg-[var(--bg-subtle)] p-1 lg:flex">
           {NAV.map((item) => (
             <Link key={item.href} href={item.href} className="nav-link">
               {item.label}
@@ -37,12 +37,18 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">
           <NetworkSelector />
           <Link href="/create" className="hidden sm:inline-flex btn-ghost-secondary">
             Start a pot
           </Link>
           <ConnectButton />
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2 lg:hidden">
+          <Link href="/create" className="hidden sm:inline-flex btn-ghost-secondary">
+            Start a pot
+          </Link>
           <NavDrawer />
         </div>
       </div>
