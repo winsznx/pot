@@ -20,6 +20,14 @@ type Props = {
   params: Promise<{ potId: string }>;
 };
 
+// OG images live on a separate Cloudflare Worker so the main pot bundle stays
+// under the free-tier 3 MiB worker limit (next/og + satori + yoga + resvg WASM
+// pushed the main worker to ~8 MB). The OG worker is deployed at
+// `pot-og.<account>.workers.dev` and accepts /og/:potId. Override at deploy
+// time via NEXT_PUBLIC_OG_BASE if pointing to a custom domain.
+const OG_BASE =
+  process.env.NEXT_PUBLIC_OG_BASE ?? "https://pot-og.timjosh507.workers.dev";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { potId } = await params;
   const pot = await fetchPot(potId);
@@ -28,6 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const desc = `On-chain pot. Raised ${formatCusd(pot.raised)} of ${
     pot.target === 0n ? "open-ended" : formatCusd(pot.target)
   }.`;
+  const ogUrl = `${OG_BASE}/og/${pot.id}`;
   return {
     title,
     description: desc,
@@ -36,20 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description: desc,
       url: `/p/${pot.id}`,
-      images: [
-        {
-          url: `/p/${pot.id}/opengraph-image`,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: desc,
-      images: [`/p/${pot.id}/opengraph-image`],
+      images: [ogUrl],
     },
   };
 }
